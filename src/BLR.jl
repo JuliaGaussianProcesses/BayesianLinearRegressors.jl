@@ -1,6 +1,9 @@
 module BLR
 
-using Random, LinearAlgebra
+using Random, LinearAlgebra, Distributions
+
+import Random: rand
+import Distributions: logpdf
 
 const AV = AbstractVector
 const AM = AbstractMatrix
