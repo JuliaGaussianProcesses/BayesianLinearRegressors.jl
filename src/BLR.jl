@@ -1,9 +1,12 @@
 module BLR
 
-using Random, LinearAlgebra, Distributions
+using Random, LinearAlgebra, Distributions, Statistics
 
+import Statistics: mean, cov
 import Random: rand
 import Distributions: logpdf
+
+export posterior
 
 const AV = AbstractVector
 const AM = AbstractMatrix

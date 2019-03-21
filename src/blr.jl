@@ -28,6 +28,13 @@ struct IndexedBLR{Tblr<:BayesianLinearRegressor, TX<:AM}
 end
 const IR = IndexedBLR
 
+mean(ir::IR) = ir.X' * ir.blr.mw
+function cov(ir::IR)
+    blr, X = ir.blr, ir.X
+    α = cholesky(blr.Λw).U' \ X
+    return Symmetric(α' * α + blr.σ² * I)
+end
+
 # Internal utility functions.
 function check_and_unpack(ir, y)
     @assert length(y) == size(ir.X, 2)
@@ -48,8 +55,8 @@ sample is returned.
 """
 function rand(rng::AbstractRNG, ir::IR, samples::Int)
     blr, X, D, N = ir.blr, ir.X, size(ir.X, 1), size(ir.X, 2)
-    w = blr.mw + cholesky(blr.Λw).U \ randn(rng, D, samples)
-    y = X' * w + cholesky(get_Σy(blr, N)).U' * randn(rng, N, samples)
+    w = blr.mw .+ cholesky(blr.Λw).U \ randn(rng, D, samples)
+    y = X' * w .+ cholesky(get_Σy(blr, N)).U' * randn(rng, N, samples)
 end
 rand(rng::AbstractRNG, ir::IR) = vec(rand(rng, ir, 1))
 
@@ -72,32 +79,37 @@ function logpdf(ir::IR, y::AV{<:Real})
     δyt_invΣy_δy = sum(abs2, invUy_δy)
 
     # Compute the posterior prediction.
-    T = Σy.U' \ A'
-    Λwy = cholesky(T * T' + I)
-    @show size(Λwy.U'), size(α)
-    αt_invΛwy_α = sum(abs2, Λwy.U' \ α)
+    T = A / Σy.U
+    Λεy = cholesky(Symmetric(T * T' + I))
+    αt_invΛεy_α = sum(abs2, Λεy.U' \ α)
 
     # Compute the logpdf.
-    return (N * log(2π) + logdet(Λwy) - logdet(Σy) + δyt_invΣy_δy - αt_invΛwy_α)
+    return -(N * log(2π) + logdet(Λεy) + logdet(Σy) + δyt_invΣy_δy - αt_invΛεy_α) / 2
 end
 
 """
-    posterior(f::BayesianLinearRegressor, X::AM{<:Real}, y::AV{<:Real})
+    posterior(blr::BayesianLinearRegressor, X::AM{<:Real}, y::AV{<:Real})
 
-Returns the posterior `BayesianLinearRegressor` produced by conditioning on `f(X) = y`.
+Returns the posterior `BayesianLinearRegressor` produced by conditioning on `blr(X) = y`.
 """
-function posterior(f::BayesianLinearRegressor, X::AM{<:Real}, y::AV{<:Real})
-    blr, X, N = check_and_unpack(ir, y)
+function posterior(blr::BayesianLinearRegressor, X::AM{<:Real}, y::AV{<:Real})
+    @assert size(X, 2) == length(y)
+    N = length(y)
 
     Uw = cholesky(blr.Λw).U
     A = Uw' \ X
 
-    # Compute the mean and precision of the posterior over ε.
-    Σy = cholesky(get_Σy(blr, N))
-    Λεy = A * (Σy \ A') + I
-    mεy = cholesky(Λεy) \ (A * (Σy \ (y - X' * blr.mw)))
+    # Compute precision of the posterior over ε.
+    Uy = cholesky(get_Σy(blr, N)).U
+    T = A / Uy
+    Λεy = Symmetric(T * T' + I)
+
+    # Compute the mean of the posterior over ε.
+    δy = y - X' * blr.mw
+    α = T * (Uy' \ δy)
+    mεy = cholesky(Λεy) \ α
 
     # Construct posterior BayesianLinearRegressor.
-    Uwt_Λεy = Uw' * Λεy
-    return BayesianLinearRegressor(Uwt_Λεy * mεy, Uwt_Λεy * Uw, blr.σ²)
+    Λεy_Uw = Λεy * Uw
+    return BayesianLinearRegressor(blr.mw + Λεy_Uw \ α, Symmetric(Uw' * Λεy_Uw), blr.σ²)
 end
