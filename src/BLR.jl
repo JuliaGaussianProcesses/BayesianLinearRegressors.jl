@@ -9,6 +9,6 @@ import Distributions: logpdf
 const AV = AbstractVector
 const AM = AbstractMatrix
 
-include("blr.jl")
+include("bayesian_linear_regression.jl")
 
 end # module
