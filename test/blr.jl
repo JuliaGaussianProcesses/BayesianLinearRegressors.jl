@@ -8,6 +8,13 @@ function generate_toy_problem(rng, N, D)
 end
 
 @testset "blr" begin
+    @testset "marginals" begin
+        rng, N, D, samples = MersenneTwister(123456), 11, 3, 1_000_000
+        X, f = generate_toy_problem(rng, N, D)
+
+        @test mean.(marginals(f(X))) == mean(f(X))
+        @test std.(marginals(f(X))) == sqrt.(diag(cov(f(X))))
+    end
     @testset "rand" begin
         rng, N, D, samples = MersenneTwister(123456), 11, 3, 1_000_000
         X, f = generate_toy_problem(rng, N, D)

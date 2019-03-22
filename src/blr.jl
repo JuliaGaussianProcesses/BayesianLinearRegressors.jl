@@ -29,6 +29,13 @@ end
 const IR = IndexedBLR
 
 mean(ir::IR) = ir.X' * ir.blr.mw
+
+function marginals(ir::IR)
+    blr, X = ir.blr, ir.X
+    α = cholesky(blr.Λw).U' \ X
+    return Normal.(mean(ir), sqrt.(vec(sum(abs2, α; dims=1)) .+ blr.σ²))
+end
+
 function cov(ir::IR)
     blr, X = ir.blr, ir.X
     α = cholesky(blr.Λw).U' \ X
@@ -92,7 +99,7 @@ end
 
 Returns the posterior `BayesianLinearRegressor` produced by conditioning on `blr(X) = y`.
 """
-function posterior(blr::BayesianLinearRegressor, X::AM{<:Real}, y::AV{<:Real})
+function posterior(blr::BayesianLinearRegressor, X::AM{<:Real}, y::AV{<:Real}; σ²=nothing)
     @assert size(X, 2) == length(y)
     N = length(y)
 
@@ -111,5 +118,6 @@ function posterior(blr::BayesianLinearRegressor, X::AM{<:Real}, y::AV{<:Real})
 
     # Construct posterior BayesianLinearRegressor.
     Λεy_Uw = Λεy * Uw
-    return BayesianLinearRegressor(blr.mw + Λεy_Uw \ α, Symmetric(Uw' * Λεy_Uw), blr.σ²)
+    σ² = σ² === nothing ? blr.σ² : σ²
+    return BayesianLinearRegressor(blr.mw + Λεy_Uw \ α, Symmetric(Uw' * Λεy_Uw), σ²)
 end

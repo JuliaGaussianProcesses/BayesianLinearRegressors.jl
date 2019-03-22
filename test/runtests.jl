@@ -1,5 +1,5 @@
 using BLR, Distributions, LinearAlgebra, Random, Test
-using BLR: BayesianLinearRegressor
+using BLR: BayesianLinearRegressor, posterior, marginals, cov, mean
 
 @testset "BLR" begin
     include("blr.jl")
