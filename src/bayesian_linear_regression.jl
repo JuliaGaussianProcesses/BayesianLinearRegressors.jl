@@ -8,12 +8,10 @@ and Gaussian.
 # Fields
 - `mw`: mean vector of the weights
 - `Λw`: precision of the weights
-- `σ²`: variance of noise
 """
-struct BayesianLinearRegressor{Tmw<:AV, TΛw<:AM, Tσ²<:Real}
+struct BayesianLinearRegressor{Tmw<:AV, TΛw<:AM}
     mw::Tmw
     Λw::TΛw
-    σ²::Tσ²
 end
 
 """
@@ -22,34 +20,33 @@ end
 Represents the random variables associated with `blr` at locations `X`. Really only
 for internal use: you probably don't want to manually construct one of these in your code.
 """
-struct IndexedBLR{Tblr<:BayesianLinearRegressor, TX<:AM}
+struct IndexedBLR{Tblr<:BayesianLinearRegressor, TX<:AM, TΣy}
     blr::Tblr
     X::TX
+    Σy::TΣy
 end
 const IR = IndexedBLR
 
-mean(ir::IR) = ir.X' * ir.blr.mw
+(blr::BayesianLinearRegressor)(X::AM, Σy) = IndexedBLR(blr, X, Σy)
+(blr::BayesianLinearRegressor)(X::AM, σ²::Real) = blr(X, Diagonal(fill(σ², size(X, 2))))
 
 function marginals(ir::IR)
     blr, X = ir.blr, ir.X
     α = cholesky(blr.Λw).U' \ X
-    return Normal.(mean(ir), sqrt.(vec(sum(abs2, α; dims=1)) .+ blr.σ²))
+    return Normal.(mean(ir), sqrt.(vec(sum(abs2, α; dims=1)) .+ diag(ir.Σy)))
 end
-
+mean(ir::IR) = ir.X' * ir.blr.mw
 function cov(ir::IR)
     blr, X = ir.blr, ir.X
     α = cholesky(blr.Λw).U' \ X
-    return Symmetric(α' * α + blr.σ² * I)
+    return Symmetric(α' * α + ir.Σy)
 end
 
-# Internal utility functions.
+# Internal utility function
 function check_and_unpack(ir, y)
     @assert length(y) == size(ir.X, 2)
     return ir.blr, ir.X, length(y)
 end
-get_Σy(blr::BayesianLinearRegressor, N::Int) = Diagonal(fill(blr.σ², N))
-
-(blr::BayesianLinearRegressor)(X::AM) = IndexedBLR(blr, X)
 
 """
     rand(ir::IR)
@@ -63,7 +60,7 @@ sample is returned.
 function rand(rng::AbstractRNG, ir::IR, samples::Int)
     blr, X, D, N = ir.blr, ir.X, size(ir.X, 1), size(ir.X, 2)
     w = blr.mw .+ cholesky(blr.Λw).U \ randn(rng, D, samples)
-    y = X' * w .+ cholesky(get_Σy(blr, N)).U' * randn(rng, N, samples)
+    y = X' * w .+ cholesky(ir.Σy).U' * randn(rng, N, samples)
 end
 rand(rng::AbstractRNG, ir::IR) = vec(rand(rng, ir, 1))
 
@@ -80,7 +77,7 @@ function logpdf(ir::IR, y::AV{<:Real})
     δy = y - X' * blr.mw
 
     # Compute stuff involving the observation noise.
-    Σy = cholesky(get_Σy(blr, N))
+    Σy = cholesky(ir.Σy)
     invUy_δy = Σy.U' \ δy
     α = A * (Σy.U \ invUy_δy)
     δyt_invΣy_δy = sum(abs2, invUy_δy)
@@ -95,29 +92,29 @@ function logpdf(ir::IR, y::AV{<:Real})
 end
 
 """
-    posterior(blr::BayesianLinearRegressor, X::AM{<:Real}, y::AV{<:Real})
+    posterior(ir::IR, y::AV{<:Real})
 
-Returns the posterior `BayesianLinearRegressor` produced by conditioning on `blr(X) = y`.
+Returns the posterior `BayesianLinearRegressor` produced by conditioning on
+`ir.blr(ir.X) = y`, from which all posterior predictive qtts can be obtained.
 """
-function posterior(blr::BayesianLinearRegressor, X::AM{<:Real}, y::AV{<:Real}; σ²=nothing)
-    @assert size(X, 2) == length(y)
-    N = length(y)
+function posterior(ir::IR, y::AV{<:Real})
+    @assert size(ir.X, 2) == length(y)
+    N, blr = length(y), ir.blr
 
     Uw = cholesky(blr.Λw).U
-    A = Uw' \ X
+    A = Uw' \ ir.X
 
     # Compute precision of the posterior over ε.
-    Uy = cholesky(get_Σy(blr, N)).U
+    Uy = cholesky(ir.Σy).U
     T = A / Uy
     Λεy = Symmetric(T * T' + I)
 
     # Compute the mean of the posterior over ε.
-    δy = y - X' * blr.mw
+    δy = y - mean(ir)
     α = T * (Uy' \ δy)
     mεy = cholesky(Λεy) \ α
 
     # Construct posterior BayesianLinearRegressor.
     Λεy_Uw = Λεy * Uw
-    σ² = σ² === nothing ? blr.σ² : σ²
-    return BayesianLinearRegressor(blr.mw + Λεy_Uw \ α, Symmetric(Uw' * Λεy_Uw), σ²)
+    return BayesianLinearRegressor(blr.mw + Λεy_Uw \ α, Symmetric(Uw' * Λεy_Uw))
 end
