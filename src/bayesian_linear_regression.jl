@@ -1,13 +1,12 @@
 """
-    BayesianLinearRegressor{Tmw, TΛw, TΣy}
+    BayesianLinearRegressor{Tmw, TΛw}
 
-A Bayesian Linear Regressor is a distribution over linear functions with i.i.d.
-homoscedastic additive aleatoric obserations noise, whose distribution is assumed zero-mean
-and Gaussian.
-
-# Fields
-- `mw`: mean vector of the weights
-- `Λw`: precision of the weights
+A Bayesian Linear Regressor is a distribution over linear functions given by
+```julia
+w ~ Normal(mw, Λw)
+f(x) = dot(x, w)
+```
+where `mw` and `Λ` are the mean and precision of `w` respectively.
 """
 struct BayesianLinearRegressor{Tmw<:AV, TΛw<:AM}
     mw::Tmw
@@ -49,8 +48,8 @@ function check_and_unpack(ir, y)
 end
 
 """
-    rand(ir::IR)
-    rand(ir::IR, samples::Int)
+    rand(rng::AbstractRNG, ir::IR)
+    rand(rng::AbstractRNG, ir::IR, samples::Int)
 
 Sample from the `BayesianLinearRegressor` `ir.blr` at `ir.X`. If `samples` is
 provided then a `Matrix` of size `size(ir.X, 2) × samples` is produced where each column is
