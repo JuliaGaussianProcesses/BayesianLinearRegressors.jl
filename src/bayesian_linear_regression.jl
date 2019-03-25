@@ -28,6 +28,7 @@ const IR = IndexedBLR
 
 (blr::BayesianLinearRegressor)(X::AM, Σy) = IndexedBLR(blr, X, Σy)
 (blr::BayesianLinearRegressor)(X::AM, σ²::Real) = blr(X, Diagonal(fill(σ², size(X, 2))))
+(blr::BayesianLinearRegressor)(x::AV, Σy) = blr(reshape(x, :, 1), Σy)
 
 function marginals(ir::IR)
     blr, X = ir.blr, ir.X
@@ -117,3 +118,4 @@ function posterior(ir::IR, y::AV{<:Real})
     Λεy_Uw = Λεy * Uw
     return BayesianLinearRegressor(blr.mw + Λεy_Uw \ α, Symmetric(Uw' * Λεy_Uw))
 end
+posterior(ir::IR, y::Real) = posterior(ir, [y])
