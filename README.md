@@ -34,12 +34,12 @@ rng = MersenneTwister(123456)
 using BLR: BayesianLinearRegressor, logpdf, rand, posterior, marginals, cov
 
 # Construct a BayesianLinearRegressor prior over linear functions of `X`.
-N = 10
-X = hcat(collect(range(-5.0, 5.0, length=N)), ones(N))'
 mw, Λw = zeros(2), Diagonal(ones(2))
 f = BayesianLinearRegressor(mw, Λw)
 
 # Index into the regressor and assume heterscedastic observation noise `Σ_noise`.
+N = 10
+X = hcat(collect(range(-5.0, 5.0, length=N)), ones(N))'
 Σ_noise = Diagonal(exp.(randn(N)))
 fX = f(X, Σ_noise)
 
@@ -47,7 +47,7 @@ fX = f(X, Σ_noise)
 y = rand(rng, fX)
 
 # Compute the adjoint of `rand` w.r.t. everything given random sensitivities of y′.
-# DOESN'T CURRENTLY WORK. SEE [here](https://github.com/FluxML/Zygote.jl/issues/124).
+# DOESN'T CURRENTLY WORK. SEE https://github.com/FluxML/Zygote.jl/issues/124.
 _, back_rand = Zygote.forward(
     (X, Σ_noise, mw, Λw)->rand(rng, BayesianLinearRegressor(mw, Λw)(X, Σ_noise), 5),
     X, Σ_noise, mw, Λw,
@@ -59,7 +59,7 @@ back_rand(randn(N, 5))
 logpdf(fX, y)
 
 # Compute the gradient of the `logpdf` w.r.t. everything.
-# DOESN'T CURRENTLY WORK. SEE [here](https://github.com/FluxML/Zygote.jl/issues/124).
+# DOESN'T CURRENTLY WORK. SEE https://github.com/FluxML/Zygote.jl/issues/124.
 Zygote.gradient(
     (X, Σ_noise, y, mw, Λw)->logpdf(BayesianLinearRegressor(mw, Λw)(X, Σ_noise), y),
     X, Σ_noise, y, mw, Λw,
