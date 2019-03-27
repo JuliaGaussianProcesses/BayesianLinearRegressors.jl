@@ -1,4 +1,4 @@
-# Bayesian Linear Regression with BLR.jl
+# Bayesian Linear Regression in Julia
 
 This is a simple package that does one thing, Bayesian Linear Regression, in around 100 lines of code.
 
@@ -23,8 +23,11 @@ A `BayesianLinearRegressor` in `D` dimensions works with data where:
 
 
 ```julia
+# Important to do this
+] add Zygote#master IRTools#master
+
 # Install the packages if you don't already have them installed
-] add BLR LinearAlgebra Random Optim Plots Distributions Zygote#master IRTools#master
+] add BLR LinearAlgebra Random Optim Plots Distributions
 using BLR, LinearAlgebra, Random, Optim, Plots, Distributions, Zygote
 
 # Fix seed for re-producibility.
@@ -39,7 +42,7 @@ f = BayesianLinearRegressor(mw, Λw)
 
 # Index into the regressor and assume heterscedastic observation noise `Σ_noise`.
 N = 10
-X = hcat(collect(range(-5.0, 5.0, length=N)), ones(N))'
+X = collect(hcat(collect(range(-5.0, 5.0, length=N)), ones(N))')
 Σ_noise = Diagonal(exp.(randn(N)))
 fX = f(X, Σ_noise)
 
@@ -47,7 +50,6 @@ fX = f(X, Σ_noise)
 y = rand(rng, fX)
 
 # Compute the adjoint of `rand` w.r.t. everything given random sensitivities of y′.
-# DOESN'T CURRENTLY WORK. SEE https://github.com/FluxML/Zygote.jl/issues/124.
 _, back_rand = Zygote.forward(
     (X, Σ_noise, mw, Λw)->rand(rng, BayesianLinearRegressor(mw, Λw)(X, Σ_noise), 5),
     X, Σ_noise, mw, Λw,
@@ -59,7 +61,6 @@ back_rand(randn(N, 5))
 logpdf(fX, y)
 
 # Compute the gradient of the `logpdf` w.r.t. everything.
-# DOESN'T CURRENTLY WORK. SEE https://github.com/FluxML/Zygote.jl/issues/124.
 Zygote.gradient(
     (X, Σ_noise, y, mw, Λw)->logpdf(BayesianLinearRegressor(mw, Λw)(X, Σ_noise), y),
     X, Σ_noise, y, mw, Λw,

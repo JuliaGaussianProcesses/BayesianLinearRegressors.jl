@@ -1,4 +1,4 @@
-name = "BLR"
+name = "BayesianLinearRegressors"
 uuid = "d4546a2c-4b32-11e9-33ce-8781f73b72c0"
 authors = ["Will Tebbutt <wt0881@my.bristol.ac.uk>"]
 version = "0.1.0"
