@@ -6,7 +6,7 @@ This is a simple package that does one thing, Bayesian Linear Regression, in aro
 
 The interface sits at roughly the same level as that of [Distributions.jl](https://github.com/JuliaStats/Distributions.jl/). This means that while you won't find a scikit-learn-style `fit` function, you will find all of the primitives that you need to construct such a function to suite your particular problem. In particular, one can:
 
-- Construct a `BayesianLinearRegressor` object by providing a mean-vector and precision matrix for the weights of said regressor. This object represents a distribution over (linear) functions.
+- Construct a `BayesianLinearRegressor` (BLR) object by providing a mean-vector and precision matrix for the weights of said regressor. This object represents a distribution over (linear) functions.
 - "Index into" said distribution over functions to construct an `IndexedBLR` object, which represents a finite-dimensional marginal of a `BayesianLinearRegressor`.
 - Compute the log marginal likelihood of a vector of observations.
 - Sample from the finite-dimensional marginals of a BLR.
@@ -27,14 +27,15 @@ A `BayesianLinearRegressor` in `D` dimensions works with data where:
 ] add Zygote#master IRTools#master
 
 # Install the packages if you don't already have them installed
-] add BLR LinearAlgebra Random Optim Plots Distributions
-using BLR, LinearAlgebra, Random, Optim, Plots, Distributions, Zygote
+] add BayesianLinearRegressors LinearAlgebra Random Optim Plots Distributions
+using BayesianLinearRegressors, LinearAlgebra, Random, Optim, Plots, Distributions, Zygote
 
 # Fix seed for re-producibility.
 rng = MersenneTwister(123456)
 
 # We don't export anything, so you need to explicitly import the stuff that you need.
-using BLR: BayesianLinearRegressor, logpdf, rand, posterior, marginals, cov
+using BayesianLinearRegressors: BayesianLinearRegressor, logpdf, rand, posterior, marginals,
+    cov
 
 # Construct a BayesianLinearRegressor prior over linear functions of `X`.
 mw, Λw = zeros(2), Diagonal(ones(2))

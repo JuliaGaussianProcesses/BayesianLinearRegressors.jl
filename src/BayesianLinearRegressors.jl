@@ -1,4 +1,4 @@
-module BLR
+module BayesianLinearRegressors
 
 using Random, LinearAlgebra, Distributions, Statistics, Zygote
 
