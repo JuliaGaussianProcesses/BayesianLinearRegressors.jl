@@ -119,3 +119,8 @@ display(posterior_plot);
 ## Bugs, Issues, and PRs
 
 Please do report and bugs you find by raising an issue. Please also feel free to raise PRs, especially if for one of the above `Up For Grabs` items. Raise an issue to discuss the extension in detail before opening a PR if you prefer though.
+
+
+## Related Work
+
+[BayesianLinearRegression.jl](https://github.com/cscherrer/BayesianLinearRegression.jl) is closely related, but appears to be a WIP and hasn't been touched in around a year or so (as of 27-03-2019).
