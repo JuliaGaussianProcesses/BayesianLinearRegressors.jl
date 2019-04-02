@@ -119,3 +119,6 @@ function posterior(ir::IR, y::AV{<:Real})
     return BayesianLinearRegressor(blr.mw + Λεy_Uw \ α, Symmetric(Uw' * Λεy_Uw))
 end
 posterior(ir::IR, y::Real) = posterior(ir, [y])
+
+# Temporary implementation of `fill` while Zygote can't handle it.
+Zygote.@adjoint fill(x::Real, dims...) = fill(x, dims...), Δ->(sum(Δ), map(_->nothing, dims)...)
