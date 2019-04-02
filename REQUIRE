@@ -1,7 +1,10 @@
+julia 1.1
 Distributions
 FDM
+IRTools
 LinearAlgebra
 PDMats
 Random
 Statistics
 Test
+Zygote
