@@ -83,7 +83,6 @@ plot!(plt, xte, [m_te m_te];
     fillalpha=0.3,
     fillcolor="red",
 );
-# plot!(plt, xte, mean.(ypr_te) .- 3 .* std.(ypr_te); linecolor="purple",  label="");
 
 # Visualise the posterior distribution over the latent function via samples.
 plot!(plt, xte, y_samples_te[:, 1];
@@ -99,7 +98,6 @@ plot!(plt, xte, y_samples_te;
 
 # Plot the data.
 scatter!(plt, x, y; markercolor="red", label="y", markersize=0.1);
-
 display(plt);
 
 
