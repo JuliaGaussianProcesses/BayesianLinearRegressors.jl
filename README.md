@@ -13,6 +13,8 @@ The interface sits at roughly the same level as that of [Distributions.jl](https
 - Perform posterior inference to produce a new BLR with an update mean and precision.
 - All operations are fully compatible with [Zygote.jl](https://github.com/FluxML/Zygote.jl/) (hopefully), so you can use gradient-based optimisation to tune the hyperparameters of your regressor etc.
 
+For examples of how to use this package in conjunction with Flux and Zygote, see the examples directory.
+
 ## Conventions
 
 A `BayesianLinearRegressor` in `D` dimensions works with data where:
