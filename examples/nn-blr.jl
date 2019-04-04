@@ -13,45 +13,47 @@ using BayesianLinearRegressors: BayesianLinearRegressor, logpdf, posterior, marg
 using Statistics: mean, std
 
 # Create an MLP that you might have seen in the 90s.
-Dlat = 100;
+Dlat = 50;
 W1, b1 = randn(Dlat, 1), randn(Dlat);
 ϕ = Chain(
     x->reshape(x, 1, :),
     x->tanh.(W1 * x .+ b1),
 )
-logσ = [log(1)]
 
+# Initialise the standard deviation of the observation noise. We will learn this.
+logσ = [log(1)]
 
 # Generate toy data.
 Ntr = 1000;
 x = collect(range(-5.0, 5.0; length=Ntr));
 y = sin.(x) + 0.1 * randn(Ntr);
 
+# Construct a simple BLR, with zero mean and identity covariance / precision prior.
 blr = BayesianLinearRegressor(zeros(Dlat), Matrix{Float64}(I, Dlat, Dlat))
 
 function nn_blr_training_loop(x, y, pars, Nitr, opt)
-    tr_loss = Vector{Float64}(undef, Nitr)
+    tr_nlml = Vector{Float64}(undef, Nitr)
     p = ProgressMeter.Progress(Nitr)
     for itr  in 1:Nitr
-        loss, back = Zygote.forward(Zygote.Params(pars)) do
+        nlml, back = Zygote.forward(Zygote.Params(pars)) do
             -logpdf(blr(ϕ(x), exp(2 * logσ[1])), y)
         end
-        tr_loss[itr] = loss
+        tr_nlml[itr] = nlml
         g = back(1.0)
         for par in pars
             Flux.Optimise.update!(opt, par, g[par])
         end
-        showvalues = [(:itr, itr), (:nlml, loss), (:σ_ε, exp(logσ[1]))]
+        showvalues = [(:itr, itr), (:nlml, nlml), (:σ_ε, exp(logσ[1]))]
         ProgressMeter.next!(p; showvalues = showvalues)
     end
-    return tr_loss
+    return tr_nlml
 end
 
-Nitr = 500;
+# Gather the parameters and perform 500 iterations of ADAM.
 pars = [W1, b1, logσ];
-nlmls = nn_blr_training_loop(x, y, pars, Nitr, ADAM(1e-2, (0.9, 0.999)));
+nlmls = nn_blr_training_loop(x, y, pars, 500, ADAM(1e-2, (0.9, 0.999)));
 
-
+# Compute the posterior BLR, given the optimised network and noise parameters.
 blr′ = posterior(blr(ϕ(x), exp(2 * logσ[1])), y);
 
 xte = collect(range(-10, 10; length=1000));
