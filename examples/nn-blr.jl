@@ -8,7 +8,7 @@
 # batching should appear at some point in the future.
 
 # Import a load of things.
-using LinearAlgebra, BayesianLinearRegressors, Zygote, Flux, Plots, ProgressMeter
+using LinearAlgebra, BayesianLinearRegressors, Zygote, Flux, Plots, ProgressMeter, Random
 using BayesianLinearRegressors: BayesianLinearRegressor, logpdf, posterior, marginals
 using Statistics: mean, std
 
@@ -60,16 +60,48 @@ blr′ = posterior(blr(ϕ(x), exp(2 * logσ[1])), y);
 xte = collect(range(-10, 10; length=1000));
 ypr_te = marginals(blr′(ϕ(xte), exp(2 * logσ[1])));
 
+# Generate samples from the posterior over the latent function. Note that the observation
+# noise is small.
+y_samples_te = rand(MersenneTwister(123456), blr′(ϕ(xte), eps()), 25);
+
 # Plot the predicted function vs the ground-truth. Doesn't generalise well, unsurprisingly.
 # Does do _really_ well inside the region containing the training data though, and is
 # nicely callibrated.
-plot(xte, mean.(ypr_te); linecolor="blue",  label="pr", linewidth=2.0);
-plot!(xte, mean.(ypr_te) .+ 3 .* std.(ypr_te); linecolor="blue",  label="");
-plot!(xte, mean.(ypr_te) .- 3 .* std.(ypr_te); linecolor="blue",  label="");
-scatter!(x, y; markercolor="red", label="y", markersize=0.1);
-plot!(xte, sin.(xte); linecolor="red", label="sin");
-plot!(xte, sin.(xte) .+ 0.3; linecolor="red", label="");
-plot!(xte, sin.(xte) .- 0.3; linecolor="red", label="")
+plt = plot();
+
+# Plot the true function with aleatoric uncertainty due to observation noise.
+plot!(plt, xte, sin.(xte); linecolor="purple", linewidth=1.5, label="sin");
+plot!(plt, xte, sin.(xte) .+ 0.3; linecolor="purple", linewidth=1.5, label="", );
+plot!(plt, xte, sin.(xte) .- 0.3; linecolor="purple", linewidth=1.5, label="")
+
+# Visualise the posterior marginal uncertainty via 3σ error bars.
+m_te, σ_te = mean.(ypr_te), std.(ypr_te)
+plot!(plt, xte, [m_te m_te];
+    label="",
+    fillrange=[m_te .+ 3 .* σ_te, m_te .- 3 .* σ_te],
+    linewidth=0,
+    fillalpha=0.3,
+    fillcolor="red",
+);
+# plot!(plt, xte, mean.(ypr_te) .- 3 .* std.(ypr_te); linecolor="purple",  label="");
+
+# Visualise the posterior distribution over the latent function via samples.
+plot!(plt, xte, y_samples_te[:, 1];
+    linecolor="blue",
+    linewidth=0.1,
+    label="Posterior Samples",
+);
+plot!(plt, xte, y_samples_te;
+    linecolor="blue",
+    linewidth=0.1,
+    label="",
+);
+
+# Plot the data.
+scatter!(plt, x, y; markercolor="red", label="y", markersize=0.1);
+
+display(plt);
+
 
 # Compute and display residuals
 ypr = marginals(blr′(ϕ(x), exp(2 * logσ[1])));
