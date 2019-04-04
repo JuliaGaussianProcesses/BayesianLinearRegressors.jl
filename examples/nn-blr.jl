@@ -56,10 +56,13 @@ nlmls = nn_blr_training_loop(x, y, pars, 500, ADAM(1e-2, (0.9, 0.999)));
 # Compute the posterior BLR, given the optimised network and noise parameters.
 blr′ = posterior(blr(ϕ(x), exp(2 * logσ[1])), y);
 
+# Make posterior predictions.
 xte = collect(range(-10, 10; length=1000));
 ypr_te = marginals(blr′(ϕ(xte), exp(2 * logσ[1])));
 
 # Plot the predicted function vs the ground-truth. Doesn't generalise well, unsurprisingly.
+# Does do _really_ well inside the region containing the training data though, and is
+# nicely callibrated.
 plot(xte, mean.(ypr_te); linecolor="blue",  label="pr", linewidth=2.0);
 plot!(xte, mean.(ypr_te) .+ 3 .* std.(ypr_te); linecolor="blue",  label="");
 plot!(xte, mean.(ypr_te) .- 3 .* std.(ypr_te); linecolor="blue",  label="");
