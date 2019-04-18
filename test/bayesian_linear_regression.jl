@@ -1,7 +1,7 @@
 # Generate a toy problem without any obvious structure in the mean, precision, or noise std.
 # Important to ensure that the unit tests don't just pass for a special case by accident.
 # Everything should be reasonably well conditioned.
-function generate_toy_problem(rng, N, D)
+function generate_dense_toy_problem(rng, N, D)
     X, B, C = randn(rng, D, N), randn(rng, D, D), 0.1 * randn(rng, N, N)
     mw, Λw, Σy = randn(rng, D), B * B' + I, C * C' + I
     return X, BayesianLinearRegressor(mw, Λw), Σy
@@ -14,17 +14,24 @@ function FDM.j′vp(fdm, f, Ȳ::AbstractArray, X::AbstractArray)
     return reshape(FDM.j′vp(fdm, x->vec(f(reshape(x, size(X)))), vec(Ȳ), vec(X)), size(X))
 end
 
+# A collection of tests that any BayesianLinearRegressor aught to be able to pass.
+function regressor_tests(rng, mw, Λw, D::Int, N::Int, S::Int, Σy)
+    @testset "marginals" begin
+        
+    end
+end
+
 @testset "blr" begin
     @testset "marginals" begin
         rng, N, D, samples = MersenneTwister(123456), 11, 3, 1_000_000
-        X, f, Σy = generate_toy_problem(rng, N, D)
+        X, f, Σy = generate_dense_toy_problem(rng, N, D)
 
         @test mean.(marginals(f(X, Σy))) == mean(f(X, Σy))
         @test std.(marginals(f(X, Σy))) == sqrt.(diag(cov(f(X, Σy))))
     end
     @testset "rand" begin
         rng, N, D, samples = MersenneTwister(123456), 11, 3, 10_000_000
-        X, f, Σy = generate_toy_problem(rng, N, D)
+        X, f, Σy = generate_dense_toy_problem(rng, N, D)
 
         # Check deterministic properties of rand.
         @test size(rand(rng, f(X, Σy))) == (N,)
@@ -63,7 +70,7 @@ end
     end
     @testset "logpdf" begin
         rng, N, D = MersenneTwister(123456), 13, 7
-        X, f, Σy = generate_toy_problem(rng, N, D)
+        X, f, Σy = generate_dense_toy_problem(rng, N, D)
         y = rand(rng, f(X, Σy))
 
         # Construct MvNormal using a naive but simple computation for the mean / cov.
@@ -99,7 +106,7 @@ end
     @testset "posterior" begin
         @testset "low noise" begin
             rng, N, D = MersenneTwister(123456), 13, 7
-            X, f, Σy = generate_toy_problem(rng, N, D)
+            X, f, Σy = generate_dense_toy_problem(rng, N, D)
             y = rand(rng, f(X, eps()))
 
             f′_low_noise = posterior(f(X, eps()), y)
@@ -108,7 +115,7 @@ end
         end
         @testset "repeated conditioning" begin
             rng, N, D = MersenneTwister(123456), 13, 7
-            X, f, Σy = generate_toy_problem(rng, N, D)
+            X, f, Σy = generate_dense_toy_problem(rng, N, D)
             X′ = randn(rng, D, N)
             y = rand(rng, f(X, Σy))
 
@@ -130,5 +137,14 @@ end
             @test mean(f′(X′, Σy)) ≈ mean(f′2(X′, Σy))
             @test cov(f′(X′, Σy)) ≈ cov(f′2(X′, Σy))
         end
+    end
+
+    @testset "BayesianLinearRegressor(::Int)" begin
+        blr = BayesianLinearRegressor(5)
+
+    end
+
+    @testset "BayesianLinearRegressor(::Int, ::Real, ::Real)" begin
+
     end
 end

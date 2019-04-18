@@ -13,6 +13,13 @@ struct BayesianLinearRegressor{Tmw<:AV, TΛw<:AM}
     Λw::TΛw
 end
 
+function BayesianLinearRegressor(mw::Real, λw::Real, D::Int)
+    return BayesianLinearRegressor(Fill(mw, D), Diagonal(Fill(λw, D)))
+end
+
+BayesianLinearRegressor(D::Int) = BayesianLinearRegressor(Zeros(D), Diagonal(Ones(D)))
+
+
 """
     IndexedBLR
 
@@ -120,5 +127,64 @@ function posterior(ir::IR, y::AV{<:Real})
 end
 posterior(ir::IR, y::Real) = posterior(ir, [y])
 
+"""
+    elbo(ir::IR, y::AV{<:Real}, q::BLR)
+
+Returns the evidence lower bound (elbo) produced by approximating the posterior distribution
+over the weights of the BLR `ir.blr` with `q`, given that we observe `ir.blr(ir.X)` taking
+value `y` under zero-mean Gaussian noise whose covariance is `ir.Σy`.
+"""
+function elbo(ir::IR, y::AV{<:Real}, q::BLR)
+
+    # Get variational parameters.
+    mε_q, Λε_q = q.mw, q.Λ
+
+    # Get prior parameters and input locations.
+    mw, Λw = ir.blr.mw, ir.blr.Λw
+    X, Σy = ir.X, ir.Σy
+
+    # Convert to ε-representation.
+    Uw, Uy = cholesky(Λw).U, cholesky(Σy).U
+    A = Uw' \ X
+    my = X' * mw
+
+    # Compute elbo.
+
+    α = y - my - A' * mε_q
+    return -(sum(abs2, Uy' \ α) + tr() + sum(abs2, mε_q) - D + logdet(Λε_q))
+end
+
+"""
+    elbo(ir::IR, y::AV{<:Real}, q::BLR, N::Int)
+
+Returns an unbiased estimator of the evidence lower bound (elbo) produced by approximating
+the posterior distribution over the weights of the BLR `ir.blr` with `q`, given that we
+observe `ir.blr(ir.X)` taking value `y` under zero-mean Gaussian noise whose covariance is
+`ir.Σy`. `N` is the total number of observations in our data set. It is assumed that `Σy` is
+block-diagonal such that each the observation noise associated with each `bth` block of data
+is independent of the noise associated with each other block.
+"""
+function elbo(ir::IR, yb::AV{<:Real}, q::BLR, N::Int)
+
+end
+
+
+#
+# Various bits of Zygote-y code that should disappear to ChainRules over time.
+#
+
 # Temporary implementation of `fill` while Zygote can't handle it.
-Zygote.@adjoint fill(x::Real, dims...) = fill(x, dims...), Δ->(sum(Δ), map(_->nothing, dims)...)
+Zygote.@adjoint function fill(x::Real, dims...)
+    return fill(x, dims...), Δ->(sum(Δ), map(_->nothing, dims)...)
+end
+
+# constant-diagonal Diagonal matrix is closed under cholesky (ish)
+function LinearAlgebra.cholesky(A::Diagonal{T, <:Fill{T, 1}} where T)
+    return Cholesky(Diagonal(Fill(sqrt(getindex_value(A.diag)), length(A.diag))), :U, 0)
+end
+Zygote.@adjoint function LinearAlgebra.cholesky(A::Diagonal{T, <:Fill{T, 1}} where T)
+    return cholesky(A), function(Δ)
+        d = sum(diag(Δ.factors)) / length(A.diag)
+        return (Diagonal(Fill(d / (2 * sqrt(getindex_value(A.diag))), length(A.diag))),)
+    end
+end
