@@ -53,7 +53,7 @@ fX = f(X, Σ_noise)
 y = rand(rng, fX)
 
 # Compute the adjoint of `rand` w.r.t. everything given random sensitivities of y′.
-_, back_rand = Zygote.forward(
+_, back_rand = Zygote.pullback(
     (X, Σ_noise, mw, Λw)->rand(rng, BayesianLinearRegressor(mw, Λw)(X, Σ_noise), 5),
     X, Σ_noise, mw, Λw,
 )
