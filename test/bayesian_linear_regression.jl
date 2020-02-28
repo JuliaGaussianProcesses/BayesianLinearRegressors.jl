@@ -7,13 +7,6 @@ function generate_toy_problem(rng, N, D)
     return X, BayesianLinearRegressor(mw, Λw), Σy
 end
 
-function FDM.j′vp(fdm, f, ȳ::Real, X::AbstractArray)
-    return reshape(FDM.j′vp(fdm, x->[f(reshape(x, size(X)))], [ȳ], vec(X)), size(X))
-end
-function FDM.j′vp(fdm, f, Ȳ::AbstractArray, X::AbstractArray)
-    return reshape(FDM.j′vp(fdm, x->vec(f(reshape(x, size(X)))), vec(Ȳ), vec(X)), size(X))
-end
-
 @testset "blr" begin
     @testset "marginals" begin
         rng, N, D, samples = MersenneTwister(123456), 11, 3, 1_000_000
@@ -46,7 +39,7 @@ end
             mw, A_Σy, A_Λw = f.mw, 0.1 .* randn(rng, N, N), 0.1 .* randn(rng, D, D)
 
             # Run the model forwards and check that output agrees with non-Zygote output.
-            z, back = Zygote.forward(rand_blr, X, A_Σy, mw, A_Λw)
+            z, back = Zygote.pullback(rand_blr, X, A_Σy, mw, A_Λw)
             @test z == rand_blr(X, A_Σy, mw, A_Λw)
 
             # Compute adjoints using Zygote.
@@ -55,10 +48,10 @@ end
 
             # Verify adjoints via finite differencing.
             fdm = central_fdm(5, 1)
-            @test dX ≈ j′vp(fdm, X->rand_blr(X, A_Σy, mw, A_Λw), z̄, X)
-            @test dA_Σy ≈ j′vp(fdm, A_Σy->rand_blr(X, A_Σy, mw, A_Λw), z̄, A_Σy)
-            @test dmw ≈ j′vp(fdm, mw->rand_blr(X, A_Σy, mw, A_Λw), z̄, mw)
-            @test dA_Λw ≈ j′vp(fdm, A_Λw->rand_blr(X, A_Σy, mw, A_Λw), z̄, A_Λw)
+            @test dX ≈ first(j′vp(fdm, X->rand_blr(X, A_Σy, mw, A_Λw), z̄, X))
+            @test dA_Σy ≈ first(j′vp(fdm, A_Σy->rand_blr(X, A_Σy, mw, A_Λw), z̄, A_Σy))
+            @test dmw ≈ first(j′vp(fdm, mw->rand_blr(X, A_Σy, mw, A_Λw), z̄, mw))
+            @test dA_Λw ≈ first(j′vp(fdm, A_Λw->rand_blr(X, A_Σy, mw, A_Λw), z̄, A_Λw))
         end
     end
     @testset "logpdf" begin
@@ -80,7 +73,7 @@ end
             end
             mw, A_Σy, A_Λw = f.mw, 0.1 .* randn(rng, N, N), 0.1 .* randn(rng, D, D)
 
-            z, back = Zygote.forward(logpdf_blr, X, A_Σy, y, mw, A_Λw)
+            z, back = Zygote.pullback(logpdf_blr, X, A_Σy, y, mw, A_Λw)
             @test z == logpdf_blr(X, A_Σy, y, mw, A_Λw)
 
             # Compute gradients using Zygote.
@@ -89,11 +82,11 @@ end
 
             # Check correctness via finite differencing.
             fdm = central_fdm(5, 1)
-            @test dX ≈ j′vp(fdm, X->logpdf_blr(X, A_Σy, y, mw, A_Λw), z̄, X)
-            @test dA_Σy ≈ j′vp(fdm, A_Σy->logpdf_blr(X, A_Σy, y, mw, A_Λw), z̄, A_Σy)
-            @test dy ≈ j′vp(fdm, y->logpdf_blr(X, A_Σy, y, mw, A_Λw), z̄, y)
-            @test dmw ≈ j′vp(fdm, mw->logpdf_blr(X, A_Σy, y, mw, A_Λw), z̄, mw)
-            @test dA_Λw ≈ j′vp(fdm, A_Λw->logpdf_blr(X, A_Σy, y, mw, A_Λw), z̄, A_Λw)
+            @test dX ≈ first(j′vp(fdm, X->logpdf_blr(X, A_Σy, y, mw, A_Λw), z̄, X))
+            @test dA_Σy ≈ first(j′vp(fdm, A_Σy->logpdf_blr(X, A_Σy, y, mw, A_Λw), z̄, A_Σy))
+            @test dy ≈ first(j′vp(fdm, y->logpdf_blr(X, A_Σy, y, mw, A_Λw), z̄, y))
+            @test dmw ≈ first(j′vp(fdm, mw->logpdf_blr(X, A_Σy, y, mw, A_Λw), z̄, mw))
+            @test dA_Λw ≈ first(j′vp(fdm, A_Λw->logpdf_blr(X, A_Σy, y, mw, A_Λw), z̄, A_Λw))
         end
     end
     @testset "posterior" begin

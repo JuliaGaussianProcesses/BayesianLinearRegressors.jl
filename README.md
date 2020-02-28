@@ -25,12 +25,9 @@ A `BayesianLinearRegressor` in `D` dimensions works with data where:
 
 
 ```julia
-# Important to do this
-] add Zygote#master IRTools#master
-
 # Install the packages if you don't already have them installed
-] add BayesianLinearRegressors LinearAlgebra Random Optim Plots Distributions
-using BayesianLinearRegressors, LinearAlgebra, Random, Optim, Plots, Distributions, Zygote
+] add BayesianLinearRegressors LinearAlgebra Random Optim Plots Zygote
+using BayesianLinearRegressors, LinearAlgebra, Random, Optim, Plots, Zygote
 
 # Fix seed for re-producibility.
 rng = MersenneTwister(123456)
