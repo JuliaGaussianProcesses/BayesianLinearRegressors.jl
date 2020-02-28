@@ -1,6 +1,6 @@
 module BayesianLinearRegressors
 
-using Random, LinearAlgebra, Distributions, Statistics, Zygote
+using Random, LinearAlgebra, Distributions, Statistics
 
 import Statistics: mean, cov
 import Random: rand
@@ -9,8 +9,7 @@ import Distributions: logpdf
 const AV = AbstractVector
 const AM = AbstractMatrix
 
-# Hack to make sure that we can ignore random number generation when computing derivatives.
-Zygote.@nograd MersenneTwister
+export logpdf, rand, mean, std, cov, BayesianLinearRegressor, marginals, posterior
 
 include("bayesian_linear_regression.jl")
 
