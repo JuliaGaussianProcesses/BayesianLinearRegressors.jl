@@ -7,16 +7,6 @@ function generate_toy_problem(rng, N, D)
     return X, BayesianLinearRegressor(mw, Λw), Σy
 end
 
-# function FiniteDifferences.j′vp(fdm, f, ȳ::Real, X::AbstractArray)
-#     return reshape(FiniteDifferences.j′vp(fdm, x->[f(reshape(x, size(X)))], [ȳ], vec(X)), size(X))
-# end
-# function FiniteDifferences.j′vp(fdm, f, Ȳ::AbstractArray, X::AbstractArray)
-#     return reshape(
-#         FiniteDifferences.j′vp(fdm, x->vec(f(reshape(x, size(X)))), vec(Ȳ), vec(X)),
-#         size(X),
-#     )
-# end
-
 @testset "blr" begin
     @testset "marginals" begin
         rng, N, D, samples = MersenneTwister(123456), 11, 3, 1_000_000
