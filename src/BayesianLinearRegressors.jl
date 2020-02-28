@@ -1,6 +1,6 @@
 module BayesianLinearRegressors
 
-using Random, LinearAlgebra, Distributions, Statistics
+using Random, LinearAlgebra, Distributions, Statistics, Zygote
 
 import Statistics: mean, cov
 import Random: rand

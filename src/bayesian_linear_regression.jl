@@ -74,21 +74,15 @@ function logpdf(ir::IR, y::AV{<:Real})
     blr, X, N = check_and_unpack(ir, y)
 
     A = cholesky(blr.Λw).U' \ X
-    δy = y - X' * blr.mw
-
-    # Compute stuff involving the observation noise.
     Σy = cholesky(ir.Σy)
-    invUy_δy = Σy.U' \ δy
-    α = A * (Σy.U \ invUy_δy)
-    δyt_invΣy_δy = sum(abs2, invUy_δy)
 
-    # Compute the posterior prediction.
-    T = A / Σy.U
-    Λεy = cholesky(Symmetric(T * T' + I))
-    αt_invΛεy_α = sum(abs2, Λεy.U' \ α)
+    Bt = Σy.U' \ A'
+    δy = Σy.U' \ (y - X' * blr.mw)
 
-    # Compute the logpdf.
-    return -(N * log(2π) + logdet(Λεy) + logdet(Σy) + δyt_invΣy_δy - αt_invΛεy_α) / 2
+    Λεy = cholesky(Symmetric(Bt'Bt + I))
+    γ = Λεy.U' \ (Bt'δy)
+
+    return -(N * log(2π) + logdet(Λεy) + logdet(Σy) + sum(abs2, δy) - sum(abs2, γ)) / 2
 end
 
 """
@@ -98,11 +92,10 @@ Returns the posterior `BayesianLinearRegressor` produced by conditioning on
 `ir.blr(ir.X) = y`, from which all posterior predictive qtts can be obtained.
 """
 function posterior(ir::IR, y::AV{<:Real})
-    @assert size(ir.X, 2) == length(y)
-    N, blr = length(y), ir.blr
+    blr, X, _ = check_and_unpack(ir, y)
 
     Uw = cholesky(blr.Λw).U
-    A = Uw' \ ir.X
+    A = Uw' \ X
 
     # Compute precision of the posterior over ε.
     Uy = cholesky(ir.Σy).U
