@@ -1,5 +1,10 @@
 # Bayesian Linear Regression in Julia
 
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://willtebbutt.github.io/BayesianLinearRegressors.jl/stable)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://willtebbutt.github.io/BayesianLinearRegressors.jl/dev)
+[![Build Status](https://travis-ci.com/willtebbutt/BayesianLinearRegressors.jl.svg?branch=master)](https://travis-ci.com/willtebbutt/BayesianLinearRegressors.jl)
+[![Codecov](https://codecov.io/gh/willtebbutt/BayesianLinearRegressors.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/willtebbutt/BayesianLinearRegressors.jl)
+
 This is a simple package that does one thing, Bayesian Linear Regression, in around 100 lines of code.
 
 ## Intended Use and Functionality
