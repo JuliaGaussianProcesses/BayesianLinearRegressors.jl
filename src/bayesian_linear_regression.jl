@@ -64,6 +64,23 @@ function rand(rng::AbstractRNG, ir::IR, samples::Int)
 end
 rand(rng::AbstractRNG, ir::IR) = vec(rand(rng, ir, 1))
 
+# Computation utilised in both `logpdf` and `posterior`.
+function __compute_inference_quantities(ir::IR, y::AV{<:Real})
+    blr, X, N = check_and_unpack(ir, y)
+
+    Uw = cholesky(blr.Λw).U
+    Σy = cholesky(ir.Σy)
+
+    Bt = Σy.U' \ (Uw' \ X)'
+    δy = Σy.U' \ (y - mean(ir))
+
+    logpdf_δy = -(N * log(2π) + logdet(Σy) + sum(abs2, δy)) / 2
+
+    Λεy = cholesky(Symmetric(Bt'Bt + I))
+
+    return Uw, Bt, δy, logpdf_δy, Λεy
+end
+
 """
     logpdf(ir::IR, y::AV{<:Real})
 
@@ -71,18 +88,8 @@ Compute the logpdf of observations `y` made at locations `ir.X` under `ir.blr`. 
 read `logpdf(f(X), y)`, where `f` is a `BayesianLinearRegressor`.
 """
 function logpdf(ir::IR, y::AV{<:Real})
-    blr, X, N = check_and_unpack(ir, y)
-
-    A = cholesky(blr.Λw).U' \ X
-    Σy = cholesky(ir.Σy)
-
-    Bt = Σy.U' \ A'
-    δy = Σy.U' \ (y - X' * blr.mw)
-
-    Λεy = cholesky(Symmetric(Bt'Bt + I))
-    γ = Λεy.U' \ (Bt'δy)
-
-    return -(N * log(2π) + logdet(Λεy) + logdet(Σy) + sum(abs2, δy) - sum(abs2, γ)) / 2
+    _, Bt, δy, logpdf_δy, Λεy = __compute_inference_quantities(ir, y)
+    return -(logdet(Λεy) - sum(abs2, Λεy.U' \ (Bt'δy))) / 2 + logpdf_δy
 end
 
 """
@@ -92,23 +99,15 @@ Returns the posterior `BayesianLinearRegressor` produced by conditioning on
 `ir.blr(ir.X) = y`, from which all posterior predictive qtts can be obtained.
 """
 function posterior(ir::IR, y::AV{<:Real})
-    blr, X, _ = check_and_unpack(ir, y)
+    Uw, Bt, δy, _, Λεy = __compute_inference_quantities(ir, y)
 
-    Uw = cholesky(blr.Λw).U
-    A = Uw' \ X
+    # Compute posterior over decorrelated weights.
+    mεy = Λεy \ (Bt'δy)
 
-    # Compute precision of the posterior over ε.
-    Uy = cholesky(ir.Σy).U
-    T = A / Uy
-    Λεy = Symmetric(T * T' + I)
-
-    # Compute the mean of the posterior over ε.
-    δy = y - mean(ir)
-    α = T * (Uy' \ δy)
-    mεy = cholesky(Λεy) \ α
-
-    # Construct posterior BayesianLinearRegressor.
-    Λεy_Uw = Λεy * Uw
-    return BayesianLinearRegressor(blr.mw + Λεy_Uw \ α, Symmetric(Uw' * Λεy_Uw))
+    # Compute posterior over weights.
+    T = Λεy.U * Uw
+    Λwy = Symmetric(T'T)
+    mwy = ir.blr.mw + Uw \ mεy
+    return BayesianLinearRegressor(mwy, Λwy)
 end
 posterior(ir::IR, y::Real) = posterior(ir, [y])
