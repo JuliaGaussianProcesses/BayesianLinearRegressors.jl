@@ -5,6 +5,8 @@
 
 This is a simple package that does one thing, Bayesian Linear Regression, in around 100 lines of code.
 
+It _is_ actively maintained, but it might appear inactive as it's one of those packages which requires very little maintenence because it's very simple.
+
 ## Intended Use and Functionality
 
 The interface sits at roughly the same level as that of [Distributions.jl](https://github.com/JuliaStats/Distributions.jl/). This means that while you won't find a scikit-learn-style `fit` function, you will find all of the primitives that you need to construct such a function to suit your particular problem. In particular, one can:
