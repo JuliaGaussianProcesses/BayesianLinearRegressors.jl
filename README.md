@@ -37,15 +37,6 @@ using AbstractGPs, BayesianLinearRegressors, LinearAlgebra, Random, Optim, Plots
 # Fix seed for re-producibility.
 rng = MersenneTwister(123456)
 
-# We don't export anything, so you need to explicitly import the stuff that you need.
-using BayesianLinearRegressors:
-    BayesianLinearRegressor,
-    logpdf,
-    rand,
-    posterior,
-    marginals,
-    cov
-
 # Construct a BayesianLinearRegressor prior over linear functions of `X`.
 mw, Λw = zeros(2), Diagonal(ones(2))
 f = BayesianLinearRegressor(mw, Λw)
