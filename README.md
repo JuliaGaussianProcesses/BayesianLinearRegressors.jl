@@ -12,13 +12,8 @@ It _is_ actively maintained, but it might appear inactive as it's one of those p
 The interface sits at roughly the same level as that of [Distributions.jl](https://github.com/JuliaStats/Distributions.jl/). This means that while you won't find a scikit-learn-style `fit` function, you will find all of the primitives that you need to construct such a function to suit your particular problem. In particular, one can:
 
 - Construct a `BayesianLinearRegressor` (BLR) object by providing a mean-vector and precision matrix for the weights of said regressor. This object represents a distribution over (linear) functions.
-- "Index into" said distribution over functions to construct an `IndexedBLR` object, which represents a finite-dimensional marginal of a `BayesianLinearRegressor`.
-- Compute the log marginal likelihood of a vector of observations.
-- Sample from the finite-dimensional marginals of a BLR.
-- Perform posterior inference to produce a new BLR with an update mean and precision.
-- All operations are fully compatible with [Zygote.jl](https://github.com/FluxML/Zygote.jl/) (hopefully), so you can use gradient-based optimisation to tune the hyperparameters of your regressor etc.
-
-For examples of how to use this package in conjunction with Flux and Zygote, see the examples directory.
+- A `BayesianLinearRegressor` is a `AbstractGP`, and implements the primary AbstractGP API.
+- Think of an instance of `BayesianLinearRegressor` as a very restricted GP, where the time complexity of inference scales linearly in the number of observations `N`.
 
 ## Conventions
 
