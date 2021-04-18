@@ -1,7 +1,6 @@
 module BayesianLinearRegressors
 
 using AbstractGPs
-using Distributions
 using LinearAlgebra
 using Random
 using Statistics
