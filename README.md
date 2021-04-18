@@ -31,15 +31,11 @@ A `BayesianLinearRegressor` in `D` dimensions works with data where:
 
 ```julia
 # Install the packages if you don't already have them installed
-] add BayesianLinearRegressors LinearAlgebra Random Optim Plots Zygote
-using BayesianLinearRegressors, LinearAlgebra, Random, Optim, Plots, Zygote
+] add AbstractGPs, BayesianLinearRegressors LinearAlgebra Random Optim Plots Zygote
+using AbstractGPs, BayesianLinearRegressors, LinearAlgebra, Random, Optim, Plots, Zygote
 
 # Fix seed for re-producibility.
 rng = MersenneTwister(123456)
-
-# We don't export anything, so you need to explicitly import the stuff that you need.
-using BayesianLinearRegressors: BayesianLinearRegressor, logpdf, rand, posterior, marginals,
-    cov
 
 # Construct a BayesianLinearRegressor prior over linear functions of `X`.
 mw, Λw = zeros(2), Diagonal(ones(2))
@@ -74,7 +70,7 @@ Zygote.gradient(
 # Perform posterior inference. Note that `f′` has the same type as `f`.
 f′ = posterior(fX, y)
 
-# Compute `logpdf` of the observations under the posterior predictive (because why not?)
+# Compute `logpdf` of the observations under the posterior predictive.
 logpdf(f′(X, Σ_noise), y)
 
 # Sample from the posterior predictive distribution.
@@ -87,23 +83,10 @@ normals = marginals(f′(X_plt, eps()))
 m′X_plt = mean.(normals)
 σ′X_plt = std.(normals)
 
-# Plot the posterior marginals.
-plotly(); # My prefered backend. Use a different one if you prefer / this doesn't work.
+# Plot the posterior. This uses the default AbstractGPs plotting recipes.
 posterior_plot = plot();
-plot!(posterior_plot, X_plt[1, :], f′X_plt; # Posterior samples.
-    linecolor=:blue,
-    linealpha=0.2,
-    label="");
-plot!(posterior_plot, X_plt[1, :], [m′X_plt m′X_plt]; # Posterior credible intervals.
-    linewidth=0.0,
-    fillrange=[m′X_plt .- 3 .* σ′X_plt, m′X_plt .+ 3 * σ′X_plt],
-    fillalpha=0.3,
-    fillcolor=:blue,
-    label="");
-plot!(posterior_plot, X_plt[1, :], m′X_plt; # Posterior mean.
-    linecolor=:blue,
-    linewidth=2.0,
-    label="");
+plot!(posterior_plot, X_plt[1, :], f′(X_plt, eps()); color=:blue, ribbon_scale=3);
+sampleplot!(posterior_plot, X_plt[1, :], f′(X_plt, eps()); color=:blue, samples=10);
 scatter!(posterior_plot, X[1, :], y; # Observations.
     markercolor=:red,
     markershape=:circle,

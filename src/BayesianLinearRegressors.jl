@@ -1,16 +1,15 @@
 module BayesianLinearRegressors
 
-using Random, LinearAlgebra, Distributions, Statistics
+using AbstractGPs
+using Distributions
+using LinearAlgebra
+using Random
+using Statistics
 
-import Statistics: mean, cov
-import Random: rand
-import Distributions: logpdf
-
-const AV = AbstractVector
-const AM = AbstractMatrix
-
-export logpdf, rand, mean, std, cov, BayesianLinearRegressor, marginals, posterior
+using AbstractGPs: AbstractGP, _cholesky, FiniteGP
 
 include("bayesian_linear_regression.jl")
+
+export logpdf, rand, mean, std, cov, BayesianLinearRegressor, marginals, posterior
 
 end # module

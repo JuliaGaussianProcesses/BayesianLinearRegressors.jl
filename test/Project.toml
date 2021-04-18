@@ -1,4 +1,5 @@
 [deps]
+AbstractGPs = "99985d1d-32ba-4be9-9821-2ec096f28918"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 FiniteDifferences = "26cc04aa-876d-5657-8c51-4c34ba976000"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -7,5 +8,5 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [compat]
-FiniteDifferences = "0.10"
-Zygote = "0.5"
+FiniteDifferences = "0.12"
+Zygote = "0.6"

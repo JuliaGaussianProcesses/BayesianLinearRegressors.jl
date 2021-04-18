@@ -13,7 +13,8 @@ end
         X, f, Σy = generate_toy_problem(rng, N, D)
 
         @test mean.(marginals(f(X, Σy))) == mean(f(X, Σy))
-        @test std.(marginals(f(X, Σy))) == sqrt.(diag(cov(f(X, Σy))))
+        @test var.(marginals(f(X, Σy))) ≈ var(f(X, Σy))
+        @test diag(cov(f(X, Σy))) ≈ var(f(X, Σy))
     end
     @testset "rand" begin
         rng, N, D, samples = MersenneTwister(123456), 11, 3, 10_000_000
