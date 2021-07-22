@@ -8,21 +8,17 @@ function generate_toy_problem(rng, N, D)
 end
 
 @testset "blr" begin
-    @testset "marginals" begin
+    @testset "consistency" begin
         rng, N, D, samples = MersenneTwister(123456), 11, 3, 1_000_000
         X, f, Σy = generate_toy_problem(rng, N, D)
 
-        @test mean.(marginals(f(X, Σy))) == mean(f(X, Σy))
-        @test var.(marginals(f(X, Σy))) ≈ var(f(X, Σy))
-        @test diag(cov(f(X, Σy))) ≈ var(f(X, Σy))
+        AbstractGPs.TestUtils.test_finitegp_primary_and_secondary_public_interface(
+            rng, f(X, Σy),
+        )
     end
     @testset "rand" begin
         rng, N, D, samples = MersenneTwister(123456), 11, 3, 10_000_000
         X, f, Σy = generate_toy_problem(rng, N, D)
-
-        # Check deterministic properties of rand.
-        @test size(rand(rng, f(X, Σy))) == (N,)
-        @test size(rand(rng, f(X, Σy), samples)) == (N, samples)
 
         # Roughly test the statistical properties of rand.
         Y = rand(rng, f(X, Σy), samples)
