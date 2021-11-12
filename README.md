@@ -5,7 +5,7 @@
 
 This is a simple package that does one thing, Bayesian Linear Regression, in around 100 lines of code.
 
-It _is_ actively maintained, but it might appear inactive as it's one of those packages which requires very little maintenence because it's very simple.
+It _is_ actively maintained, but it might appear inactive as it's one of those packages which requires very little maintenance because it's very simple.
 
 ## Intended Use and Functionality
 
@@ -97,11 +97,11 @@ display(posterior_plot);
 ## Up For Grabs
 
 - Scikit-learn style interface: it wouldn't be too hard to implement a scikit-learn - style interface to handle basic regression tasks, so please feel free to make a PR that implements this.
-- Monte Carlo VI (MCVI): i.e. variational inference using the reparametrisation trick. This could be very useful when working with large data sets and applying big non-linear transformations, such as neural networks, to the inputs as it would enable mini-batching. I would envise at least supporting both a dense approximate posterior covariance and diagonal (i.e. mean-field), where the latter is for small-moderate dimensionalities and the latter for very high-dimensional problems.
+- Monte Carlo VI (MCVI): i.e. variational inference using the reparametrisation trick. This could be very useful when working with large data sets and applying big non-linear transformations, such as neural networks, to the inputs as it would enable mini-batching. I would envisage at least supporting both a dense approximate posterior covariance and diagonal (i.e. mean-field), where the latter is for small-moderate dimensionalities and the latter for very high-dimensional problems.
 
 ## Bugs, Issues, and PRs
 
-Please do report and bugs you find by raising an issue. Please also feel free to raise PRs, especially if for one of the above `Up For Grabs` items. Raise an issue to discuss the extension in detail before opening a PR if you prefer though.
+Please do report any bugs you find by raising an issue. Please also feel free to raise PRs, especially if for one of the above `Up For Grabs` items. Raise an issue to discuss the extension in detail before opening a PR if you prefer, though.
 
 
 ## Related Work
