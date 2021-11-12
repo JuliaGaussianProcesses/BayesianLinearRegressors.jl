@@ -6,7 +6,7 @@ A Bayesian Linear Regressor is a distribution over linear functions given by
 w ~ Normal(mw, Λw)
 f(x) = dot(x, w)
 ```
-where `mw` and `Λ` are the mean and precision of `w` respectively.
+where `mw` and `Λw` are the mean and precision of `w`, respectively.
 """
 struct BayesianLinearRegressor{Tmw<:AbstractVector, TΛw<:AbstractMatrix} <: AbstractGP
     mw::Tmw
