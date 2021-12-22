@@ -128,6 +128,11 @@ end
         g = rand(rng, f)
         @test g(X) == g(X)  # check the sample doesn't change between evaluations
 
+        Xc = ColVecs(X)
+        Xr = RowVecs(X')
+        @test g(X) == g(Xc)
+        @test g(X) == g(Xr)
+
         # test statistical properties of the sampled functions
         gs = rand(rng, f, samples)
         Y = hcat(map(h -> h(X), gs)...)
