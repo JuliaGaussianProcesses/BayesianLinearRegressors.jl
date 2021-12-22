@@ -121,4 +121,19 @@ end
             @test cov(f′(X′, Σy)) ≈ cov(f′2(X′, Σy))
         end
     end
+    @testset "sampling functions" begin
+        rng, N, N_, D, samples = MersenneTwister(123456), 11, 5, 3, 10_000_000
+        X, f, Σy = generate_toy_problem(rng, N, D)
+
+        g = rand(rng, f)
+        @test g(X) == g(X)  # check the sample doesn't change between evaluations
+
+        # test statistical properties of the sampled functions
+        gs = rand(rng, f, samples)
+        Y = hcat(map(h -> h(X), gs)...)
+        m_empirical = mean(Y; dims=2)
+        Σ_empirical = (Y .- mean(Y; dims=2)) * (Y .- mean(Y; dims=2))' ./ samples
+        @test mean(f(X, Σy)) ≈ m_empirical atol=1e-3 rtol=1e-3
+        @test cov(f(X, Σy)) ≈ Σ_empirical + Σy atol=1e-3 rtol=1e-3
+    end
 end

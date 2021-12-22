@@ -73,3 +73,25 @@ function __compute_inference_quantities(fx::FiniteBLR, y::AbstractVector{<:Real}
 
     return Uw, Bt, δy, logpdf_δy, Λεy
 end
+
+# Random function sample generation
+# Following the Random API: https://docs.julialang.org/en/v1/stdlib/Random/#An-optimized-sampler-with-pre-computed-data
+struct BLRFunctionSample{Tw<:AbstractVector}
+    w::Tw
+end
+
+(s::BLRFunctionSample)(X::AbstractMatrix{<:Real}) = X's.w
+(s::BLRFunctionSample)(X::ColVecs) = X.X's.w
+(s::BLRFunctionSample)(X::RowVecs) = X.X * s.w
+
+Random.eltype(::Type{<:BayesianLinearRegressor}) = BLRFunctionSample
+
+function Random.Sampler(::Type{<:AbstractRNG}, blr::BayesianLinearRegressor, ::Random.Repetition)
+    Λw_U = _cholesky(blr.Λw).U
+    Random.SamplerSimple(blr, (Λw_U=Λw_U, mw=blr.mw))
+end
+
+function Random.rand(rng::AbstractRNG, sp::Random.SamplerSimple{<:BayesianLinearRegressor})
+    w = sp.data.mw .+ sp.data.Λw_U \ randn(rng, size(sp.data.mw))
+    return BLRFunctionSample(w)
+end
