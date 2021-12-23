@@ -95,3 +95,11 @@ function Random.rand(rng::AbstractRNG, sp::Random.SamplerSimple{<:BayesianLinear
     w = sp.data.mw .+ sp.data.Λw_U \ randn(rng, size(sp.data.mw))
     return BLRFunctionSample(w)
 end
+
+function Random.rand!(rng::AbstractRNG, A::AbstractArray{<:BLRFunctionSample}, sp::Random.SamplerSimple{<:BayesianLinearRegressor})
+    ws = sp.data.mw .+ sp.data.Λw_U \ randn(rng, (only(size(sp.data.mw)), prod(size(A))))
+    for i in LinearIndices(A)
+        @inbounds A[i] = BLRFunctionSample(ws[:,i])
+    end
+    return A
+end

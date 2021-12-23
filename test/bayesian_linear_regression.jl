@@ -122,7 +122,7 @@ end
         end
     end
     @testset "sampling functions" begin
-        rng, N, N_, D, samples = MersenneTwister(123456), 11, 5, 3, 10_000_000
+        rng, N, D = MersenneTwister(123456), 11, 5
         X, f, Σy = generate_toy_problem(rng, N, D)
 
         g = rand(rng, f)
@@ -133,9 +133,12 @@ end
         @test g(X) == g(Xc)
         @test g(X) == g(Xr)
 
+        samples1, samples2 = 10_000, 1000
+        gs = rand(rng, f, samples1, samples2)
+        @test size(gs) == (samples1, samples2)
+
         # test statistical properties of the sampled functions
-        gs = rand(rng, f, samples)
-        Y = reduce(hcat, map(h -> h(X), gs))
+        Y = reduce(hcat, map(h -> h(X), reshape(gs, :)))
         m_empirical = mean(Y; dims=2)
         Σ_empirical = (Y .- mean(Y; dims=2)) * (Y .- mean(Y; dims=2))' ./ samples
         @test mean(f(X, Σy)) ≈ m_empirical atol=1e-3 rtol=1e-3
