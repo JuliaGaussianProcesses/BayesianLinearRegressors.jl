@@ -88,7 +88,7 @@ Random.eltype(::Type{<:BayesianLinearRegressor}) = BLRFunctionSample
 
 function Random.Sampler(::Type{<:AbstractRNG}, blr::BayesianLinearRegressor, ::Random.Repetition)
     Λw_U = _cholesky(blr.Λw).U
-    Random.SamplerSimple(blr, (Λw_U=Λw_U, mw=blr.mw))
+    return Random.SamplerSimple(blr, (Λw_U=Λw_U, mw=blr.mw))
 end
 
 function Random.rand(rng::AbstractRNG, sp::Random.SamplerSimple{<:BayesianLinearRegressor})

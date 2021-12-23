@@ -135,7 +135,7 @@ end
 
         # test statistical properties of the sampled functions
         gs = rand(rng, f, samples)
-        Y = hcat(map(h -> h(X), gs)...)
+        Y = reduce(hcat, map(h -> h(X), gs))
         m_empirical = mean(Y; dims=2)
         Σ_empirical = (Y .- mean(Y; dims=2)) * (Y .- mean(Y; dims=2))' ./ samples
         @test mean(f(X, Σy)) ≈ m_empirical atol=1e-3 rtol=1e-3
