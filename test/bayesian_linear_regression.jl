@@ -140,7 +140,7 @@ end
         # test statistical properties of the sampled functions
         Y = reduce(hcat, map(h -> h(X), reshape(gs, :)))
         m_empirical = mean(Y; dims=2)
-        Σ_empirical = (Y .- mean(Y; dims=2)) * (Y .- mean(Y; dims=2))' ./ samples
+        Σ_empirical = (Y .- mean(Y; dims=2)) * (Y .- mean(Y; dims=2))' ./ (samples1 * samples2)
         @test mean(f(X, Σy)) ≈ m_empirical atol=1e-3 rtol=1e-3
         @test cov(f(X, Σy)) ≈ Σ_empirical + Σy atol=1e-3 rtol=1e-3
     end
