@@ -96,3 +96,11 @@ function Random.rand(rng::AbstractRNG, blr::BayesianLinearRegressor, dims::Dims)
     bs = [BLRFunctionSample(w) for w in eachcol(ws)]
     return reshape(bs, dims)
 end
+
+function Random.rand!(rng::AbstractRNG, A::AbstractArray{<:BLRFunctionSample}, blr::BayesianLinearRegressor)
+    ws = blr.mw .+ _cholesky(blr.Λw).U \ randn(rng, (only(size(blr.mw)), prod(size(A))))
+    for i in LinearIndices(A)
+        @inbounds A[i] = BLRFunctionSample(ws[:,i])
+    end
+    return A
+end
