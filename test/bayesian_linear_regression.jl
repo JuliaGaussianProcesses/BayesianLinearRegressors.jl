@@ -121,6 +121,7 @@ end
             @test cov(f′(X′, Σy)) ≈ cov(f′2(X′, Σy))
         end
     end
+
     @testset "sampling functions" begin
         rng, N, D = MersenneTwister(123456), 11, 5
         X, f, Σy = generate_toy_problem(rng, N, D)
@@ -134,14 +135,54 @@ end
         @test g(X) == g(Xr)
 
         samples1, samples2 = 10_000, 1000
+        samples = samples1 * samples2
         gs = rand(rng, f, samples1, samples2)
         @test size(gs) == (samples1, samples2)
 
         # test statistical properties of the sampled functions
         Y = reduce(hcat, map(h -> h(X), reshape(gs, :)))
         m_empirical = mean(Y; dims=2)
-        Σ_empirical = (Y .- mean(Y; dims=2)) * (Y .- mean(Y; dims=2))' ./ (samples1 * samples2)
+        Σ_empirical = (Y .- mean(Y; dims=2)) * (Y .- mean(Y; dims=2))' ./ samples
         @test mean(f(X, Σy)) ≈ m_empirical atol=1e-3 rtol=1e-3
         @test cov(f(X, Σy)) ≈ Σ_empirical + Σy atol=1e-3 rtol=1e-3
+
+        @testset "Zygote (everything dense)" begin
+            function test_rand_funcs_adjoints(sample_function)
+                rng, N, D = MersenneTwister(123456), 11, 5
+                X, f, Σy = generate_toy_problem(rng, N, D)
+                mw, A_Σy, A_Λw = f.mw, 0.1 .* randn(rng, N, N), 0.1 .* randn(rng, D, D)
+
+                # Run the model forwards and check that output agrees with non-Zygote output.
+                z, back = Zygote.pullback(sample_function, X, A_Σy, mw, A_Λw)
+                @test z == sample_function(X, A_Σy, mw, A_Λw)
+
+                # Compute adjoints using Zygote.
+                z̄ = randn(rng, size(z))
+                dX, dA_Σy, dmw, dA_Λw = back(z̄)
+
+                # Verify adjoints via finite differencing.
+                fdm = central_fdm(5, 1)
+                @test dX ≈ first(j′vp(fdm, X->sample_function(X, A_Σy, mw, A_Λw), z̄, X))
+                @test dmw ≈ first(j′vp(fdm, mw->sample_function(X, A_Σy, mw, A_Λw), z̄, mw))
+                @test dA_Λw ≈ first(j′vp(fdm, A_Λw->sample_function(X, A_Σy, mw, A_Λw), z̄, A_Λw))
+            end
+
+            function rand_funcs_single(X, A_Σy, mw, A_Λw)
+                Σy, Λw = Symmetric(A_Σy * A_Σy' + I), Symmetric(A_Λw * A_Λw' + I)
+                f = BayesianLinearRegressor(mw, Λw)
+                g = rand(MersenneTwister(123456), f)
+                return g(X)
+            end
+
+            function rand_funcs_multi(X, A_Σy, mw, A_Λw)
+                Σy, Λw = Symmetric(A_Σy * A_Σy' + I), Symmetric(A_Λw * A_Λw' + I)
+                f = BayesianLinearRegressor(mw, Λw)
+                gs = rand(MersenneTwister(123456), f, 1, 1)
+                return reduce(hcat, map(h -> h(X), reshape(gs, :)))
+            end
+
+            test_rand_funcs_adjoints(rand_funcs_single)
+            test_rand_funcs_adjoints(rand_funcs_multi)
+        end
     end
 end
