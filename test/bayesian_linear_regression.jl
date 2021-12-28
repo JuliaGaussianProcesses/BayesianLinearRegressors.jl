@@ -134,6 +134,9 @@ end
         @test g(X) == g(Xc)
         @test g(X) == g(Xr)
 
+        # test the Random interface
+        @test rand(rng, Random.Sampler(rng, f, Val(Inf))) isa BayesianLinearRegressors.BLRFunctionSample
+
         samples1, samples2 = 10_000, 1000
         samples = samples1 * samples2
         gs = rand(rng, f, samples1, samples2)
