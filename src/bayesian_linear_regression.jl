@@ -84,9 +84,7 @@ end
 (s::BLRFunctionSample)(X::ColVecs) = X.X's.w
 (s::BLRFunctionSample)(X::RowVecs) = X.X * s.w
 
-Random.eltype(::Type{<:BayesianLinearRegressor}) = BLRFunctionSample
-
-Random.Sampler(rng::AbstractRNG, blr::BayesianLinearRegressor, ::Random.Repetition) = blr
+Random.Sampler(::Type{<:AbstractRNG}, blr::BayesianLinearRegressor, ::Random.Repetition) = blr
 
 function Random.rand(rng::AbstractRNG, blr::BayesianLinearRegressor)
     w = blr.mw .+ _cholesky(blr.Λw).U \ randn(rng, size(blr.mw))
