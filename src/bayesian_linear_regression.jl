@@ -73,3 +73,34 @@ function __compute_inference_quantities(fx::FiniteBLR, y::AbstractVector{<:Real}
 
     return Uw, Bt, δy, logpdf_δy, Λεy
 end
+
+# Random function sample generation
+# Following the Random API: https://docs.julialang.org/en/v1/stdlib/Random/#Hooking-into-the-Random-API
+struct BLRFunctionSample{Tw<:AbstractVector}
+    w::Tw
+end
+
+(s::BLRFunctionSample)(X::AbstractMatrix{<:Real}) = X's.w
+(s::BLRFunctionSample)(X::ColVecs) = X.X's.w
+(s::BLRFunctionSample)(X::RowVecs) = X.X * s.w
+
+Random.Sampler(::Type{<:AbstractRNG}, blr::BayesianLinearRegressor, ::Random.Repetition) = blr
+
+function Random.rand(rng::AbstractRNG, blr::BayesianLinearRegressor)
+    w = blr.mw .+ _cholesky(blr.Λw).U \ randn(rng, size(blr.mw))
+    return BLRFunctionSample(w)
+end
+
+function Random.rand(rng::AbstractRNG, blr::BayesianLinearRegressor, dims::Dims)
+    ws = blr.mw .+ _cholesky(blr.Λw).U \ randn(rng, (only(size(blr.mw)), prod(dims)))
+    bs = [BLRFunctionSample(w) for w in eachcol(ws)]
+    return reshape(bs, dims)
+end
+
+function Random.rand!(rng::AbstractRNG, A::AbstractArray{<:BLRFunctionSample}, blr::BayesianLinearRegressor)
+    ws = blr.mw .+ _cholesky(blr.Λw).U \ randn(rng, (only(size(blr.mw)), prod(size(A))))
+    for i in LinearIndices(A)
+        @inbounds A[i] = BLRFunctionSample(ws[:,i])
+    end
+    return A
+end
