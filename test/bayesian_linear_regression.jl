@@ -13,7 +13,7 @@ end
         X, f, Σy = generate_toy_problem(rng, N, D)
 
         AbstractGPs.TestUtils.test_finitegp_primary_and_secondary_public_interface(
-            rng, f(X, Σy),
+            rng, f(X, Σy)
         )
     end
     @testset "rand" begin
@@ -24,8 +24,8 @@ end
         Y = rand(rng, f(X, Σy), samples)
         m_empirical = mean(Y; dims=2)
         Σ_empirical = (Y .- mean(Y; dims=2)) * (Y .- mean(Y; dims=2))' ./ samples
-        @test mean(f(X, Σy)) ≈ m_empirical atol=1e-3 rtol=1e-3
-        @test cov(f(X, Σy)) ≈ Σ_empirical atol=1e-3 rtol=1e-3
+        @test mean(f(X, Σy)) ≈ m_empirical atol = 1e-3 rtol = 1e-3
+        @test cov(f(X, Σy)) ≈ Σ_empirical atol = 1e-3 rtol = 1e-3
 
         @testset "Zygote (everything dense)" begin
             function rand_blr(X, A_Σy, mw, A_Λw)
@@ -45,10 +45,10 @@ end
 
             # Verify adjoints via finite differencing.
             fdm = central_fdm(5, 1)
-            @test dX ≈ first(j′vp(fdm, X->rand_blr(X, A_Σy, mw, A_Λw), z̄, X))
-            @test dA_Σy ≈ first(j′vp(fdm, A_Σy->rand_blr(X, A_Σy, mw, A_Λw), z̄, A_Σy))
-            @test dmw ≈ first(j′vp(fdm, mw->rand_blr(X, A_Σy, mw, A_Λw), z̄, mw))
-            @test dA_Λw ≈ first(j′vp(fdm, A_Λw->rand_blr(X, A_Σy, mw, A_Λw), z̄, A_Λw))
+            @test dX ≈ first(j′vp(fdm, X -> rand_blr(X, A_Σy, mw, A_Λw), z̄, X))
+            @test dA_Σy ≈ first(j′vp(fdm, A_Σy -> rand_blr(X, A_Σy, mw, A_Λw), z̄, A_Σy))
+            @test dmw ≈ first(j′vp(fdm, mw -> rand_blr(X, A_Σy, mw, A_Λw), z̄, mw))
+            @test dA_Λw ≈ first(j′vp(fdm, A_Λw -> rand_blr(X, A_Σy, mw, A_Λw), z̄, A_Λw))
         end
     end
     @testset "logpdf" begin
@@ -79,11 +79,13 @@ end
 
             # Check correctness via finite differencing.
             fdm = central_fdm(5, 1)
-            @test dX ≈ first(j′vp(fdm, X->logpdf_blr(X, A_Σy, y, mw, A_Λw), z̄, X))
-            @test dA_Σy ≈ first(j′vp(fdm, A_Σy->logpdf_blr(X, A_Σy, y, mw, A_Λw), z̄, A_Σy))
-            @test dy ≈ first(j′vp(fdm, y->logpdf_blr(X, A_Σy, y, mw, A_Λw), z̄, y))
-            @test dmw ≈ first(j′vp(fdm, mw->logpdf_blr(X, A_Σy, y, mw, A_Λw), z̄, mw))
-            @test dA_Λw ≈ first(j′vp(fdm, A_Λw->logpdf_blr(X, A_Σy, y, mw, A_Λw), z̄, A_Λw))
+            @test dX ≈ first(j′vp(fdm, X -> logpdf_blr(X, A_Σy, y, mw, A_Λw), z̄, X))
+            @test dA_Σy ≈
+                first(j′vp(fdm, A_Σy -> logpdf_blr(X, A_Σy, y, mw, A_Λw), z̄, A_Σy))
+            @test dy ≈ first(j′vp(fdm, y -> logpdf_blr(X, A_Σy, y, mw, A_Λw), z̄, y))
+            @test dmw ≈ first(j′vp(fdm, mw -> logpdf_blr(X, A_Σy, y, mw, A_Λw), z̄, mw))
+            @test dA_Λw ≈
+                first(j′vp(fdm, A_Λw -> logpdf_blr(X, A_Σy, y, mw, A_Λw), z̄, A_Λw))
         end
     end
     @testset "posterior" begin
@@ -105,14 +107,11 @@ end
             # Chop up the noise because we can't condition on noise that's correlated
             # between things.
             N1 = N - 3
-            Σ1, Σ2 = Σy[1:N1, 1:N1], Σy[N1+1:end, N1+1:end]
-            Σy′ = vcat(
-                hcat(Σ1, zeros(N1, N - N1)),
-                hcat(zeros(N - N1, N1), Σ2),
-            )
+            Σ1, Σ2 = Σy[1:N1, 1:N1], Σy[(N1 + 1):end, (N1 + 1):end]
+            Σy′ = vcat(hcat(Σ1, zeros(N1, N - N1)), hcat(zeros(N - N1, N1), Σ2))
 
-            X1, X2 = X[:, 1:N1], X[:, N1+1:end]
-            y1, y2 = y[1:N1], y[N1+1:end]
+            X1, X2 = X[:, 1:N1], X[:, (N1 + 1):end]
+            y1, y2 = y[1:N1], y[(N1 + 1):end]
 
             f′1 = posterior(f(X1, Σ1), y1)
             f′2 = posterior(f′1(X2, Σ2), y2)
@@ -135,7 +134,8 @@ end
         @test g(X) == g(Xr)
 
         # test the Random interface
-        @test rand(rng, Random.Sampler(rng, f, Val(Inf))) isa BayesianLinearRegressors.BLRFunctionSample
+        @test rand(rng, Random.Sampler(rng, f, Val(Inf))) isa
+            BayesianLinearRegressors.BLRFunctionSample
 
         samples1, samples2 = 10_000, 1000
         samples = samples1 * samples2
@@ -145,8 +145,8 @@ end
         # test statistical properties of the sampled functions
         let
             Y = reduce(hcat, map(h -> h(X), reshape(gs, :)))
-            m_empirical = mean(Y; dims = 2)
-            Σ_empirical = (Y .- mean(Y; dims = 2)) * (Y .- mean(Y; dims = 2))' ./ samples
+            m_empirical = mean(Y; dims=2)
+            Σ_empirical = (Y .- mean(Y; dims=2)) * (Y .- mean(Y; dims=2))' ./ samples
             @test mean(f(X, Σy)) ≈ m_empirical atol = 1e-3 rtol = 1e-3
             @test cov(f(X, Σy)) ≈ Σ_empirical + Σy atol = 1e-3 rtol = 1e-3
         end
@@ -154,14 +154,12 @@ end
         # test statistical properties of in-place rand
         let
             A = Array{BayesianLinearRegressors.BLRFunctionSample,2}(
-                undef,
-                samples1,
-                samples2,
+                undef, samples1, samples2
             )
             A = rand!(rng, A, f)
             Y = reduce(hcat, map(h -> h(X), reshape(gs, :)))
-            m_empirical = mean(Y; dims = 2)
-            Σ_empirical = (Y .- mean(Y; dims = 2)) * (Y .- mean(Y; dims = 2))' ./ samples
+            m_empirical = mean(Y; dims=2)
+            Σ_empirical = (Y .- mean(Y; dims=2)) * (Y .- mean(Y; dims=2))' ./ samples
             @test mean(f(X, Σy)) ≈ m_empirical atol = 1e-3 rtol = 1e-3
             @test cov(f(X, Σy)) ≈ Σ_empirical + Σy atol = 1e-3 rtol = 1e-3
         end
@@ -185,7 +183,7 @@ end
                 @test dX ≈ first(j′vp(fdm, X -> sample_function(X, mw, A_Λw), z̄, X))
                 @test dmw ≈ first(j′vp(fdm, mw -> sample_function(X, mw, A_Λw), z̄, mw))
                 @test dA_Λw ≈
-                      first(j′vp(fdm, A_Λw -> sample_function(X, mw, A_Λw), z̄, A_Λw))
+                    first(j′vp(fdm, A_Λw -> sample_function(X, mw, A_Λw), z̄, A_Λw))
             end
 
             function rand_funcs_single(X, mw, A_Λw)

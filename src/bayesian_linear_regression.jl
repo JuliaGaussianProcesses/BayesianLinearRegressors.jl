@@ -8,7 +8,7 @@ f(x) = dot(x, w)
 ```
 where `mw` and `Λw` are the mean and precision of `w`, respectively.
 """
-struct BayesianLinearRegressor{Tmw<:AbstractVector, TΛw<:AbstractMatrix} <: AbstractGP
+struct BayesianLinearRegressor{Tmw<:AbstractVector,TΛw<:AbstractMatrix} <: AbstractGP
     mw::Tmw
     Λw::TΛw
 end
@@ -35,7 +35,7 @@ AbstractGPs.mean_and_var(fx::FiniteBLR) = (mean(fx), var(fx))
 
 function AbstractGPs.rand(rng::AbstractRNG, fx::FiniteBLR, samples::Int)
     w = fx.f.mw .+ _cholesky(fx.f.Λw).U \ randn(rng, size(fx.x.X, 1), samples)
-    y = fx.x.X' * w .+ _cholesky(fx.Σy).U' * randn(rng, size(fx.x.X, 2), samples)
+    return y = fx.x.X' * w .+ _cholesky(fx.Σy).U' * randn(rng, size(fx.x.X, 2), samples)
 end
 
 function AbstractGPs.logpdf(fx::FiniteBLR, y::AbstractVector{<:Real})
@@ -84,7 +84,11 @@ end
 (s::BLRFunctionSample)(X::ColVecs) = X.X's.w
 (s::BLRFunctionSample)(X::RowVecs) = X.X * s.w
 
-Random.Sampler(::Type{<:AbstractRNG}, blr::BayesianLinearRegressor, ::Random.Repetition) = blr
+function Random.Sampler(
+    ::Type{<:AbstractRNG}, blr::BayesianLinearRegressor, ::Random.Repetition
+)
+    return blr
+end
 
 function Random.rand(rng::AbstractRNG, blr::BayesianLinearRegressor)
     w = blr.mw .+ _cholesky(blr.Λw).U \ randn(rng, size(blr.mw))
@@ -97,10 +101,12 @@ function Random.rand(rng::AbstractRNG, blr::BayesianLinearRegressor, dims::Dims)
     return reshape(bs, dims)
 end
 
-function Random.rand!(rng::AbstractRNG, A::AbstractArray{<:BLRFunctionSample}, blr::BayesianLinearRegressor)
+function Random.rand!(
+    rng::AbstractRNG, A::AbstractArray{<:BLRFunctionSample}, blr::BayesianLinearRegressor
+)
     ws = blr.mw .+ _cholesky(blr.Λw).U \ randn(rng, (only(size(blr.mw)), prod(size(A))))
     for i in LinearIndices(A)
-        @inbounds A[i] = BLRFunctionSample(ws[:,i])
+        @inbounds A[i] = BLRFunctionSample(ws[:, i])
     end
     return A
 end

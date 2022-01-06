@@ -15,10 +15,7 @@ using Statistics: mean, std
 # Create an MLP that you might have seen in the 90s.
 Dlat = 50;
 W1, b1 = randn(Dlat, 1), randn(Dlat);
-ϕ = Chain(
-    x->reshape(x, 1, :),
-    x->tanh.(W1 * x .+ b1),
-)
+ϕ = Chain(x -> reshape(x, 1, :), x -> tanh.(W1 * x .+ b1))
 
 # Initialise the standard deviation of the observation noise. We will learn this.
 logσ = [log(1)]
@@ -34,7 +31,7 @@ blr = BayesianLinearRegressor(zeros(Dlat), Matrix{Float64}(I, Dlat, Dlat))
 function nn_blr_training_loop(x, y, pars, Nitr, opt)
     tr_nlml = Vector{Float64}(undef, Nitr)
     p = ProgressMeter.Progress(Nitr)
-    for itr  in 1:Nitr
+    for itr in 1:Nitr
         nlml, back = Zygote.forward(Zygote.Params(pars)) do
             -logpdf(blr(ϕ(x), exp(2 * logσ[1])), y)
         end
@@ -44,7 +41,7 @@ function nn_blr_training_loop(x, y, pars, Nitr, opt)
             Flux.Optimise.update!(opt, par, g[par])
         end
         showvalues = [(:itr, itr), (:nlml, nlml), (:σ_ε, exp(logσ[1]))]
-        ProgressMeter.next!(p; showvalues = showvalues)
+        ProgressMeter.next!(p; showvalues=showvalues)
     end
     return tr_nlml
 end
@@ -71,12 +68,15 @@ plt = plot();
 
 # Plot the true function with aleatoric uncertainty due to observation noise.
 plot!(plt, xte, sin.(xte); linecolor="purple", linewidth=1.5, label="sin");
-plot!(plt, xte, sin.(xte) .+ 0.3; linecolor="purple", linewidth=1.5, label="", );
+plot!(plt, xte, sin.(xte) .+ 0.3; linecolor="purple", linewidth=1.5, label="");
 plot!(plt, xte, sin.(xte) .- 0.3; linecolor="purple", linewidth=1.5, label="")
 
 # Visualise the posterior marginal uncertainty via 3σ error bars.
 m_te, σ_te = mean.(ypr_te), std.(ypr_te)
-plot!(plt, xte, [m_te m_te];
+plot!(
+    plt,
+    xte,
+    [m_te m_te];
     label="",
     fillrange=[m_te .+ 3 .* σ_te, m_te .- 3 .* σ_te],
     linewidth=0,
@@ -85,21 +85,14 @@ plot!(plt, xte, [m_te m_te];
 );
 
 # Visualise the posterior distribution over the latent function via samples.
-plot!(plt, xte, y_samples_te[:, 1];
-    linecolor="blue",
-    linewidth=0.1,
-    label="Posterior Samples",
+plot!(
+    plt, xte, y_samples_te[:, 1]; linecolor="blue", linewidth=0.1, label="Posterior Samples"
 );
-plot!(plt, xte, y_samples_te;
-    linecolor="blue",
-    linewidth=0.1,
-    label="",
-);
+plot!(plt, xte, y_samples_te; linecolor="blue", linewidth=0.1, label="");
 
 # Plot the data.
 scatter!(plt, x, y; markercolor="red", label="y", markersize=0.1);
 display(plt);
-
 
 # Compute and display residuals
 ypr = marginals(blr′(ϕ(x), exp(2 * logσ[1])));
