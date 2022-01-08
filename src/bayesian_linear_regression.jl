@@ -35,7 +35,7 @@ AbstractGPs.mean_and_var(fx::FiniteBLR) = (mean(fx), var(fx))
 
 function AbstractGPs.rand(rng::AbstractRNG, fx::FiniteBLR, samples::Int)
     w = fx.f.mw .+ _cholesky(fx.f.Λw).U \ randn(rng, size(fx.x.X, 1), samples)
-    return y = fx.x.X' * w .+ _cholesky(fx.Σy).U' * randn(rng, size(fx.x.X, 2), samples)
+    return fx.x.X' * w .+ _cholesky(fx.Σy).U' * randn(rng, size(fx.x.X, 2), samples)
 end
 
 function AbstractGPs.logpdf(fx::FiniteBLR, y::AbstractVector{<:Real})
