@@ -137,7 +137,7 @@ end
         @test rand(rng, Random.Sampler(rng, f, Val(Inf))) isa
             BayesianLinearRegressors.BLRFunctionSample
 
-        samples1, samples2 = 10_000, 1000
+        samples1, samples2 = 1000, 1000
         samples = samples1 * samples2
         gs = rand(rng, f, samples1, samples2)
         @test size(gs) == (samples1, samples2)
@@ -148,7 +148,7 @@ end
             m_empirical = mean(Y; dims=2)
             Σ_empirical = (Y .- mean(Y; dims=2)) * (Y .- mean(Y; dims=2))' ./ samples
             @test mean(f(X, Σy)) ≈ m_empirical atol = 1e-3 rtol = 1e-3
-            @test cov(f(X, Σy)) ≈ Σ_empirical + Σy atol = 1e-3 rtol = 1e-3
+            @test cov(f(X, Σy)) ≈ Σ_empirical + Σy atol = 1e-2 rtol = 1e-2
         end
 
         # test statistical properties of in-place rand
@@ -161,7 +161,7 @@ end
             m_empirical = mean(Y; dims=2)
             Σ_empirical = (Y .- mean(Y; dims=2)) * (Y .- mean(Y; dims=2))' ./ samples
             @test mean(f(X, Σy)) ≈ m_empirical atol = 1e-3 rtol = 1e-3
-            @test cov(f(X, Σy)) ≈ Σ_empirical + Σy atol = 1e-3 rtol = 1e-3
+            @test cov(f(X, Σy)) ≈ Σ_empirical + Σy atol = 1e-2 rtol = 1e-2
         end
 
         @testset "Zygote (everything dense)" begin
