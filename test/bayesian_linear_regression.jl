@@ -20,9 +20,9 @@ function generate_toy_problem(rng, N, D, ::Type{<:RowVecs})
 end
 
 # Some type-piracy.
-Base.isapprox(dx::NamedTuple{(:X, )}, dy::ColVecs) = isapprox(dx.X, dy.X)
+Base.isapprox(dx::NamedTuple{(:X,)}, dy::ColVecs) = isapprox(dx.X, dy.X)
 
-Base.isapprox(dx::NamedTuple{(:X, )}, dy::RowVecs) = isapprox(dx.X, dy.X)
+Base.isapprox(dx::NamedTuple{(:X,)}, dy::RowVecs) = isapprox(dx.X, dy.X)
 
 @testset "blr $Tx" for Tx in [Matrix, ColVecs, RowVecs]
     @testset "consistency" begin

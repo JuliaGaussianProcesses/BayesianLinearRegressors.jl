@@ -13,7 +13,7 @@ struct BayesianLinearRegressor{Tmw<:AbstractVector,TΛw<:AbstractMatrix} <: Abst
     Λw::TΛw
 end
 
-const FiniteBLR = FiniteGP{<:BayesianLinearRegressor, <:ColVecs}
+const FiniteBLR = FiniteGP{<:BayesianLinearRegressor,<:ColVecs}
 
 # All code below implements the primary + secondary AbstractGPs.jl APIs.
 
@@ -74,13 +74,11 @@ function __compute_inference_quantities(fx::FiniteBLR, y::AbstractVector{<:Real}
     return Uw, Bt, δy, logpdf_δy, Λεy
 end
 
-
-
 #
 # Input type: RowVecs
 #
 
-const FiniteBLRRowVecs = FiniteGP{<:BayesianLinearRegressor, <:RowVecs}
+const FiniteBLRRowVecs = FiniteGP{<:BayesianLinearRegressor,<:RowVecs}
 
 finite_blr(fx::FiniteBLRRowVecs) = FiniteGP(fx.f, ColVecs(fx.x.X'), fx.Σy)
 
