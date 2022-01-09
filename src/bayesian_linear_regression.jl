@@ -74,6 +74,45 @@ function __compute_inference_quantities(fx::FiniteBLR, y::AbstractVector{<:Real}
     return Uw, Bt, δy, logpdf_δy, Λεy
 end
 
+
+
+#
+# Input type: RowVecs
+#
+
+const FiniteBLRRowVecs = FiniteGP{<:BayesianLinearRegressor, <:RowVecs}
+
+finite_blr(fx::FiniteBLRRowVecs) = FiniteGP(fx.f, ColVecs(fx.x.X'), fx.Σy)
+
+AbstractGPs.mean(fx::FiniteBLRRowVecs) = mean(finite_blr(fx))
+
+AbstractGPs.cov(fx::FiniteBLRRowVecs) = cov(finite_blr(fx))
+
+AbstractGPs.var(fx::FiniteBLRRowVecs) = var(finite_blr(fx))
+
+AbstractGPs.mean_and_cov(fx::FiniteBLRRowVecs) = mean_and_cov(finite_blr(fx))
+
+AbstractGPs.mean_and_var(fx::FiniteBLRRowVecs) = mean_and_var(finite_blr(fx))
+
+function AbstractGPs.rand(rng::AbstractRNG, fx::FiniteBLRRowVecs, samples::Int)
+    return rand(rng, finite_blr(fx), samples)
+end
+
+function AbstractGPs.logpdf(fx::FiniteBLRRowVecs, y::AbstractVector{<:Real})
+    return logpdf(finite_blr(fx), y)
+end
+
+function AbstractGPs.posterior(fx::FiniteBLRRowVecs, y::AbstractVector{<:Real})
+    return posterior(finite_blr(fx), y)
+end
+
+
+
+#
+# Input type: AbstractVector{<:Real}
+#
+
+
 # Random function sample generation
 # Following the Random API: https://docs.julialang.org/en/v1/stdlib/Random/#Hooking-into-the-Random-API
 struct BLRFunctionSample{Tw<:AbstractVector}

@@ -22,7 +22,9 @@ end
 # Some type-piracy.
 Base.isapprox(dx::NamedTuple{(:X, )}, dy::ColVecs) = isapprox(dx.X, dy.X)
 
-@testset "blr $Tx" for Tx in [Matrix, ColVecs]
+Base.isapprox(dx::NamedTuple{(:X, )}, dy::RowVecs) = isapprox(dx.X, dy.X)
+
+@testset "blr $Tx" for Tx in [Matrix, ColVecs, RowVecs]
     @testset "consistency" begin
         rng, N, D, samples = MersenneTwister(123456), 11, 3, 1_000_000
         X, f, Σy = generate_toy_problem(rng, N, D, Tx)
@@ -76,6 +78,7 @@ Base.isapprox(dx::NamedTuple{(:X, )}, dy::ColVecs) = isapprox(dx.X, dy.X)
             return (X' * f.mw, Symmetric(X' * (cholesky(f.Λw) \ X) + Σy))
         end
         naive_normal_stats(X::ColVecs) = naive_normal_stats(X.X)
+        naive_normal_stats(X::RowVecs) = naive_normal_stats(collect(X.X'))
         m, Σ = naive_normal_stats(X)
 
         # Check that logpdf agrees between distributions and BLR.
