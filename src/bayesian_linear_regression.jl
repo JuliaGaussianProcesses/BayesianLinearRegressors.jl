@@ -106,13 +106,6 @@ function AbstractGPs.posterior(fx::FiniteBLRRowVecs, y::AbstractVector{<:Real})
     return posterior(finite_blr(fx), y)
 end
 
-
-
-#
-# Input type: AbstractVector{<:Real}
-#
-
-
 # Random function sample generation
 # Following the Random API: https://docs.julialang.org/en/v1/stdlib/Random/#Hooking-into-the-Random-API
 struct BLRFunctionSample{Tw<:AbstractVector}
