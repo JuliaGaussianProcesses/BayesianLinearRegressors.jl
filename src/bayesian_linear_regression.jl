@@ -13,7 +13,7 @@ struct BayesianLinearRegressor{Tmw<:AbstractVector,TΛw<:AbstractMatrix} <: Abst
     Λw::TΛw
 end
 
-const FiniteBLR = FiniteGP{<:BayesianLinearRegressor}
+const FiniteBLR = FiniteGP{<:BayesianLinearRegressor, <:ColVecs}
 
 # All code below implements the primary + secondary AbstractGPs.jl APIs.
 
