@@ -17,15 +17,28 @@ const FiniteBLR = FiniteGP{<:BayesianLinearRegressor}
 
 # All code below implements the primary + secondary AbstractGPs.jl APIs.
 
-AbstractGPs.mean(fx::FiniteBLR) = fx.x.X' * fx.f.mw
+x_as_colvecs(fx::FiniteBLR) = x_as_colvecs(fx.x)
+
+x_as_colvecs(x::ColVecs) = x
+
+x_as_colvecs(x::RowVecs) = ColVecs(x.X')
+
+function x_as_colvecs(x::T) where {T<:AbstractVector}
+    return error(
+        "$T is not a subtype of AbstractVector that is known. Please provide either a",
+        "ColVecs or RowVecs.",
+    )
+end
+
+AbstractGPs.mean(fx::FiniteBLR) = x_as_colvecs(fx).X' * fx.f.mw
 
 function AbstractGPs.cov(fx::FiniteBLR)
-    α = _cholesky(fx.f.Λw).U' \ fx.x.X
+    α = _cholesky(fx.f.Λw).U' \ x_as_colvecs(fx).X
     return Symmetric(α' * α + fx.Σy)
 end
 
 function AbstractGPs.var(fx::FiniteBLR)
-    α = _cholesky(fx.f.Λw).U' \ fx.x.X
+    α = _cholesky(fx.f.Λw).U' \ x_as_colvecs(fx).X
     return vec(sum(abs2, α; dims=1)) .+ diag(fx.Σy)
 end
 
@@ -34,8 +47,9 @@ AbstractGPs.mean_and_cov(fx::FiniteBLR) = (mean(fx), cov(fx))
 AbstractGPs.mean_and_var(fx::FiniteBLR) = (mean(fx), var(fx))
 
 function AbstractGPs.rand(rng::AbstractRNG, fx::FiniteBLR, samples::Int)
-    w = fx.f.mw .+ _cholesky(fx.f.Λw).U \ randn(rng, size(fx.x.X, 1), samples)
-    return fx.x.X' * w .+ _cholesky(fx.Σy).U' * randn(rng, size(fx.x.X, 2), samples)
+    X = x_as_colvecs(fx).X
+    w = fx.f.mw .+ _cholesky(fx.f.Λw).U \ randn(rng, size(X, 1), samples)
+    return X' * w .+ _cholesky(fx.Σy).U' * randn(rng, size(X, 2), samples)
 end
 
 function AbstractGPs.logpdf(fx::FiniteBLR, y::AbstractVector{<:Real})
@@ -56,9 +70,9 @@ end
 
 # Computation utilised in both `logpdf` and `posterior`.
 function __compute_inference_quantities(fx::FiniteBLR, y::AbstractVector{<:Real})
-    length(y) == size(fx.x.X, 2) || throw(error("length(y) != size(fx.x.X, 2)"))
+    X = x_as_colvecs(fx).X
+    length(y) == size(X, 2) || throw(error("length(y) != size(fx.x.X, 2)"))
     blr = fx.f
-    X = fx.x.X
     N = length(y)
 
     Uw = _cholesky(blr.Λw).U

@@ -17,9 +17,15 @@ The interface sits at roughly the same level as that of [Distributions.jl](https
 
 ## Conventions
 
-A `BayesianLinearRegressor` in `D` dimensions works with data where:
-- inputs `X` should be a `D x N` matrix of `Real`s where each column is from one data point.
-- outputs `y` should be an `N`-vector of `Real`s, where each element is from one data point.
+`BayesianLinearRegressors` is consistent with `AbstractGPs`.
+Consequently, a `BayesianLinearRegressor` in `D` dimensions can work with the following input types:
+1. `ColVecs` -- a wrapper around an `D x N` matrix of `Real`s saying that each column should be interpreted as an input.
+2. `RowVecs`s -- a wrapper around an `N x D` matrix of `Real`s, saying that each row should be interpreted as an input.
+3. `Matrix{<:Real}` -- must be `D x N`. Prefer using `ColVecs` or `RowVecs` for the sake of being explicit.
+
+Consult the `Design` section of the [KernelFunctions.jl](https://juliagaussianprocesses.github.io/KernelFunctions.jl/dev/design/) docs for more info on these conventions.
+
+Outputs for a BayesianLinearRegressor should be an `AbstractVector{<:Real}` of length `N`.
 
 ## Example Usage
 
@@ -38,7 +44,7 @@ f = BayesianLinearRegressor(mw, Λw)
 
 # Index into the regressor and assume heterscedastic observation noise `Σ_noise`.
 N = 10
-X = collect(hcat(collect(range(-5.0, 5.0, length=N)), ones(N))')
+X = ColVecs(collect(hcat(collect(range(-5.0, 5.0, length=N)), ones(N))'))
 Σ_noise = Diagonal(exp.(randn(N)))
 fX = f(X, Σ_noise)
 
@@ -70,7 +76,7 @@ logpdf(f′(X, Σ_noise), y)
 
 # Sample from the posterior predictive distribution.
 N_plt = 1000
-X_plt = hcat(collect(range(-6.0, 6.0, length=N_plt)), ones(N_plt))'
+X_plt = ColVecs(hcat(collect(range(-6.0, 6.0, length=N_plt)), ones(N_plt))')
 f′X_plt = rand(rng, f′(X_plt, eps()), 100) # Samples with machine-epsilon noise for stability
 
 # Compute some posterior marginal statisics.
