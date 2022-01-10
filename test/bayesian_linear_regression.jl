@@ -64,9 +64,11 @@ Base.isapprox(dx::NamedTuple{(:X,)}, dy::RowVecs) = isapprox(dx.X, dy.X)
                 # Verify adjoints via finite differencing.
                 fdm = central_fdm(5, 1)
                 @test dX ≈ first(j′vp(fdm, X -> rand_blr(X, A_Σy, mw, A_Λw), z̄, X))
-                @test dA_Σy ≈ first(j′vp(fdm, A_Σy -> rand_blr(X, A_Σy, mw, A_Λw), z̄, A_Σy))
+                @test dA_Σy ≈
+                    first(j′vp(fdm, A_Σy -> rand_blr(X, A_Σy, mw, A_Λw), z̄, A_Σy))
                 @test dmw ≈ first(j′vp(fdm, mw -> rand_blr(X, A_Σy, mw, A_Λw), z̄, mw))
-                @test dA_Λw ≈ first(j′vp(fdm, A_Λw -> rand_blr(X, A_Σy, mw, A_Λw), z̄, A_Λw))
+                @test dA_Λw ≈
+                    first(j′vp(fdm, A_Λw -> rand_blr(X, A_Σy, mw, A_Λw), z̄, A_Λw))
             end
         end
         @testset "logpdf" begin
