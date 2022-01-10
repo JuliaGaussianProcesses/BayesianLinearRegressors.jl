@@ -24,7 +24,7 @@ x_as_colvecs(x::ColVecs) = x
 x_as_colvecs(x::RowVecs) = ColVecs(x.X')
 
 function x_as_colvecs(x::T) where {T<:AbstractVector}
-    error(
+    return error(
         "$T is not a subtype of AbstractVector that is known. Please provide either a",
         "ColVecs or RowVecs.",
     )
