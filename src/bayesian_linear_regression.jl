@@ -8,10 +8,17 @@ f(x) = dot(x, w)
 ```
 where `mw` and `Λw` are the mean and precision of `w`, respectively.
 """
-struct BayesianLinearRegressor{Tmw<:AbstractVector,TΛw<:AbstractMatrix} <: AbstractGP
+struct BayesianLinearRegressor{Tmw<:AbstractVector,TΛw<:AbstractMatrix,Tϕ} <: AbstractGP
     mw::Tmw
     Λw::TΛw
+    ϕ::Tϕ
 end
+
+function BayesianLinearRegressor(mw::AbstractVector, Λw::AbstractMatrix)
+    return BayesianLinearRegressor(mw, Λw, identity)
+end
+
+(blr::BayesianLinearRegressor)(x, args...) = FiniteGP(blr, blr.ϕ(x), args...)
 
 const FiniteBLR = FiniteGP{<:BayesianLinearRegressor}
 
