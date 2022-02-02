@@ -13,9 +13,7 @@ BLRFunctionSample(w) = BLRFunctionSample(w, identity)
 
 BLRorBasisFunction = Union{BayesianLinearRegressor,BasisFunctionBayesianLinearRegressor}
 
-function Random.Sampler(
-    ::Type{<:AbstractRNG}, blr::Tblr, ::Random.Repetition
-) where {Tblr<:BLRorBasisFunction}
+function Random.Sampler(::Type{<:AbstractRNG}, blr::BLRorBasisFunction, ::Random.Repetition)
     return blr
 end
 
