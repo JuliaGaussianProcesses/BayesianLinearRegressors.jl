@@ -19,6 +19,11 @@ function BayesianLinearRegressor(mw::AbstractVector, Λw::AbstractMatrix)
 end
 
 (blr::BayesianLinearRegressor)(x, args...) = FiniteGP(blr, blr.ϕ(x), args...)
+function (blr::BayesianLinearRegressor)(
+    X::AbstractMatrix, args...; obsdim::Union{Int,Nothing}=KernelFunctions.defaultobs
+)
+    return blr(KernelFunctions.vec_of_vecs(X; obsdim=obsdim), args...)
+end
 
 const FiniteBLR = FiniteGP{<:BayesianLinearRegressor}
 
