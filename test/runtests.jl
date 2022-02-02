@@ -10,6 +10,10 @@ using Zygote
 using BayesianLinearRegressors: BayesianLinearRegressor, posterior, marginals, cov, mean
 using FiniteDifferences: j′vp
 
+include("test_utils.jl")
+
 @testset "BayesianLinearRegressors" begin
     include("bayesian_linear_regression.jl")
+    include("basis_function_regression.jl")
+    include("sampling_functions.jl")
 end
