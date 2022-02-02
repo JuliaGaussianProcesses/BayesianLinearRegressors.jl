@@ -20,22 +20,22 @@ function Random.Sampler(
 end
 
 function Random.rand(rng::AbstractRNG, b::BLRorBasisFunction)
-    blr, ϕ = _get_blr_and_mapping(b)
+    blr, ϕ = _blr_and_mapping(b)
     w = blr.mw .+ _cholesky(blr.Λw).U \ randn(rng, size(blr.mw))
     return BLRFunctionSample(w, ϕ)
 end
 
 function Random.rand(rng::AbstractRNG, b::BLRorBasisFunction, dims::Dims)
-    blr, ϕ = _get_blr_and_mapping(b)
+    blr, ϕ = _blr_and_mapping(b)
     ws = blr.mw .+ _cholesky(blr.Λw).U \ randn(rng, (only(size(blr.mw)), prod(dims)))
     bs = [BLRFunctionSample(w, ϕ) for w in eachcol(ws)]
     return reshape(bs, dims)
 end
 
 function Random.rand!(
-    rng::AbstractRNG, A::AbstractArray{<:BLRFunctionSample}, b::BLRorBasisFunction
+    rng::AbstractRNG, A::AbstractArray{<:BLRorBasisFunction}, b::BLRorBasisFunction
 )
-    blr, ϕ = _get_blr_and_mapping(b)
+    blr, ϕ = _blr_and_mapping(b)
     ws = blr.mw .+ _cholesky(blr.Λw).U \ randn(rng, (only(size(blr.mw)), prod(size(A))))
     for i in LinearIndices(A)
         @inbounds A[i] = BLRFunctionSample(ws[:, i], ϕ)
@@ -43,5 +43,5 @@ function Random.rand!(
     return A
 end
 
-_get_blr_and_mapping(b::BayesianLinearRegressor) = b, identity
-_get_blr_and_mapping(b::BasisFunctionBayesianLinearRegressor) = b.blr, b.ϕ
+_blr_and_mapping(b::BayesianLinearRegressor) = b, identity
+_blr_and_mapping(b::BasisFunctionBayesianLinearRegressor) = b.blr, b.ϕ
