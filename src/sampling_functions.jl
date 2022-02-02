@@ -31,7 +31,7 @@ function Random.rand(rng::AbstractRNG, b::BLRorBasisFunction, dims::Dims)
 end
 
 function Random.rand!(
-    rng::AbstractRNG, A::AbstractArray{<:BLRorBasisFunction}, b::BLRorBasisFunction
+    rng::AbstractRNG, A::AbstractArray{<:BLRFunctionSample}, b::BLRorBasisFunction
 )
     blr, ϕ = _blr_and_mapping(b)
     ws = blr.mw .+ _cholesky(blr.Λw).U \ randn(rng, (only(size(blr.mw)), prod(size(A))))
