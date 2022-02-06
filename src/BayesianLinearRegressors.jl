@@ -12,6 +12,6 @@ include("basis_function_regression.jl")
 include("sampling_functions.jl")
 
 export logpdf, rand, mean, std, cov, BayesianLinearRegressor, marginals, posterior
-export BasisFunctionBayesianLinearRegressor
+export BasisFunctionRegressor
 
 end # module
