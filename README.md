@@ -12,8 +12,10 @@ It _is_ actively maintained, but it might appear inactive as it's one of those p
 The interface sits at roughly the same level as that of [Distributions.jl](https://github.com/JuliaStats/Distributions.jl/). This means that while you won't find a scikit-learn-style `fit` function, you will find all of the primitives that you need to construct such a function to suit your particular problem. In particular, one can:
 
 - Construct a `BayesianLinearRegressor` (BLR) object by providing a mean-vector and precision matrix for the weights of said regressor. This object represents a distribution over (linear) functions.
-- A `BayesianLinearRegressor` is a `AbstractGP`, and implements the primary AbstractGP API.
+- Use a `BayesianLinearRegressor` as an `AbstractGP`, as it implements the primary AbstractGP API.
 - Think of an instance of `BayesianLinearRegressor` as a very restricted GP, where the time complexity of inference scales linearly in the number of observations `N`.
+- Draw function samples from a `BayesianLinearRegressor` using `rand`.
+- Construct a `BasisFunctionRegressor` object which is a thin wrapper around a `BayesianLinearRegressor` to allow a non-linear feature mapping `ϕ` to act on the input.
 
 ## Conventions
 
@@ -103,7 +105,7 @@ display(posterior_plot);
 ## Up For Grabs
 
 - Scikit-learn style interface: it wouldn't be too hard to implement a scikit-learn - style interface to handle basic regression tasks, so please feel free to make a PR that implements this.
-- Monte Carlo VI (MCVI): i.e. variational inference using the reparametrisation trick. This could be very useful when working with large data sets and applying big non-linear transformations, such as neural networks, to the inputs as it would enable mini-batching. I would envisage at least supporting both a dense approximate posterior covariance and diagonal (i.e. mean-field), where the latter is for small-moderate dimensionalities and the latter for very high-dimensional problems.
+- Monte Carlo VI (MCVI): i.e. variational inference using the reparametrisation trick. This could be very useful when working with large data sets and applying big non-linear transformations, such as neural networks, to the inputs as it would enable mini-batching. I would envisage at least supporting both a dense approximate posterior covariance and diagonal (i.e. mean-field), where the former is for small-moderate dimensionalities and the latter for very high-dimensional problems.
 
 ## Bugs, Issues, and PRs
 
