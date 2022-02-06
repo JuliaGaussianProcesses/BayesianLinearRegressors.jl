@@ -11,7 +11,7 @@ BLRFunctionSample(w) = BLRFunctionSample(w, identity)
 (s::BLRFunctionSample)(X::ColVecs) = s.ϕ(X).X's.w
 (s::BLRFunctionSample)(X::RowVecs) = s.ϕ(X).X * s.w
 
-BLRorBasisFunction = Union{BayesianLinearRegressor,BasisFunctionBayesianLinearRegressor}
+BLRorBasisFunction = Union{BayesianLinearRegressor,BasisFunctionRegressor}
 
 function Random.Sampler(::Type{<:AbstractRNG}, blr::BLRorBasisFunction, ::Random.Repetition)
     return blr
@@ -42,4 +42,4 @@ function Random.rand!(
 end
 
 _blr_and_mapping(b::BayesianLinearRegressor) = b, identity
-_blr_and_mapping(b::BasisFunctionBayesianLinearRegressor) = b.blr, b.ϕ
+_blr_and_mapping(b::BasisFunctionRegressor) = b.blr, b.ϕ
