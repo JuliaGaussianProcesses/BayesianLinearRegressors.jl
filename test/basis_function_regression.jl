@@ -4,7 +4,7 @@
             rng, N, D, samples = MersenneTwister(123456), 11, 2, 1_000_000
             X, f, Σy = generate_toy_problem(rng, N, D, Tx)
 
-            f_bf = BasisFunctionBayesianLinearRegressor(f, ϕ)
+            f_bf = BasisFunctionRegressor(f, ϕ)
 
             AbstractGPs.TestUtils.test_finitegp_primary_and_secondary_public_interface(
                 rng, f_bf(X, Σy)
@@ -14,7 +14,7 @@
             rng, N, D, samples = MersenneTwister(123456), 11, 2, 10_000_000
             X, f, Σy = generate_toy_problem(rng, N, D, Tx)
 
-            f_bf = BasisFunctionBayesianLinearRegressor(f, ϕ)
+            f_bf = BasisFunctionRegressor(f, ϕ)
 
             # Roughly test the statistical properties of rand.
             Y = rand(rng, f_bf(X, Σy), samples)

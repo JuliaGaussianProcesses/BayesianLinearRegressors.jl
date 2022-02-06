@@ -90,7 +90,7 @@
             rng, N, D = MersenneTwister(123456), 11, 2
             X, f, Σy = generate_toy_problem(rng, N, D, Tx)
 
-            f_bf = BasisFunctionBayesianLinearRegressor(f, ϕ)
+            f_bf = BasisFunctionRegressor(f, ϕ)
 
             samples = 1_000_000
             gs = rand(rng, f_bf, samples)
