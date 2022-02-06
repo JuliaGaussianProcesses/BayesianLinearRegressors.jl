@@ -1,11 +1,18 @@
 # Random function sample generation
 # Following the Random API: https://docs.julialang.org/en/v1/stdlib/Random/#Hooking-into-the-Random-API
+"""
+    BLRFunctionSample{Tw,Tϕ}
+
+A function sampled from
+ `b::Union{BayesianLinearRegressor,BasisFunctionRegressor}` by taking a fixed
+ weight sample `w ~ p(w)`. `ϕ` is the feature mapping if sampled from a
+ `BasisFunctionRegressor`, or is the identity function if sampled from a
+ `BayesianLinearRegressor`.
+"""
 struct BLRFunctionSample{Tw<:AbstractVector,Tϕ}
     w::Tw
     ϕ::Tϕ
 end
-
-BLRFunctionSample(w) = BLRFunctionSample(w, identity)
 
 (s::BLRFunctionSample)(X::AbstractMatrix{<:Real}) = s.ϕ(X)'s.w
 (s::BLRFunctionSample)(X::ColVecs) = s.ϕ(X).X's.w
