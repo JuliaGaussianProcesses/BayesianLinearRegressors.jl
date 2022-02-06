@@ -101,6 +101,25 @@ scatter!(posterior_plot, X[1, :], y; # Observations.
 display(posterior_plot);
 ```
 
+## Basis Function Regression
+
+Any instance of a `BayesianLinearRegressor` can be replaced by a `BasisFunctionRegressor` (BFR). A `BasisFunctionRegressor` is a thin wrapper around a `BayesianLinearRegressor`, but includes a potentially non-linear feature mapping `ϕ` which is applied to the input before it is passed to the underlying BLR. It is essentially defined as `bfr(X) = blr(ϕ(X))`
+
+``` julia
+using AbstractGPs, BayesianLinearRegressors, LinearAlgebra
+
+X = RowVecs(hcat(range(-1.0, 1.0, length=5)))
+blr = BayesianLinearRegressor(zeros(2), Diagonal(ones(2)))
+
+# N.B. ϕ must accept one of the allowed input types and
+# must return the same type (in this case RowVecs)
+ϕ(x::RowVecs) = RowVecs(hcat(ones(length(x)), prod.(x)))
+
+bfr = BasisFunctionRegressor(blr, ϕ)
+
+# These are equivalent
+var(bfr(X)) == var(blr(ϕ(X)))
+```
 
 ## Up For Grabs
 
