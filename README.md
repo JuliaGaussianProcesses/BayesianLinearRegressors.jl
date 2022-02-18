@@ -88,9 +88,9 @@ m′X_plt = mean.(normals)
 
 # Plot the posterior. This uses the default AbstractGPs plotting recipes.
 posterior_plot = plot();
-plot!(posterior_plot, X_plt[1, :], f′(X_plt, eps()); color=:blue, ribbon_scale=3);
-sampleplot!(posterior_plot, X_plt[1, :], f′(X_plt, eps()); color=:blue, samples=10);
-scatter!(posterior_plot, X[1, :], y; # Observations.
+plot!(posterior_plot, X_plt.X[1, :], f′(X_plt, eps()); color=:blue, ribbon_scale=3);
+sampleplot!(posterior_plot, X_plt.X[1, :], f′(X_plt, eps()); color=:blue, samples=10);
+scatter!(posterior_plot, X.X[1, :], y; # Observations.
     markercolor=:red,
     markershape=:circle,
     markerstrokewidth=0.0,
