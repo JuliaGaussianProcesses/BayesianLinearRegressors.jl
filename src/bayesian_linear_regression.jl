@@ -65,7 +65,7 @@ function AbstractGPs.posterior(fx::FiniteBLR, y::AbstractVector{<:Real})
 
     # Compute posterior over weights.
     T = Λεy.U * Uw
-    return BayesianLinearRegressor(fx.f.mw + Uw \ mεy, Symmetric(T'T))
+    return BayesianLinearRegressor(fx.f.mw + Uw \ mεy, __build_Λ(typeof(fx.f.Λw), T))
 end
 
 # Computation utilised in both `logpdf` and `posterior`.
@@ -86,4 +86,19 @@ function __compute_inference_quantities(fx::FiniteBLR, y::AbstractVector{<:Real}
     Λεy = _cholesky(Symmetric(Bt'Bt + I))
 
     return Uw, Bt, δy, logpdf_δy, Λεy
+end
+
+# Ensure that the posterior weight matrix is a PDMat if the prior is a PDMat.
+__build_Λ(_, U::AbstractMatrix) = Symmetric(U'U)
+__build_Λ(::Type{<:AbstractPDMat}, U::AbstractMatrix) = PDMat(Cholesky(UpperTriangular(U)))
+
+# https://github.com/JuliaLang/julia/pull/39352
+if VERSION < v"1.7"
+    function LinearAlgebra.Cholesky(L::LowerTriangular{T}) where {T}
+        return Cholesky{T,typeof(L.data)}(L.data, 'L', 0)
+    end
+    function LinearAlgebra.Cholesky(U::UpperTriangular{T}) where {T}
+        println("wooo")
+        return Cholesky{T,typeof(U.data)}(U.data, 'U', 0)
+    end
 end
