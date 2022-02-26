@@ -98,7 +98,6 @@ if VERSION < v"1.7"
         return Cholesky{T,typeof(L.data)}(L.data, 'L', 0)
     end
     function LinearAlgebra.Cholesky(U::UpperTriangular{T}) where {T}
-        println("wooo")
         return Cholesky{T,typeof(U.data)}(U.data, 'U', 0)
     end
 end
