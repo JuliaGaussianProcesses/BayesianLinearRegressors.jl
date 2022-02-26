@@ -34,7 +34,7 @@ Outputs for a BayesianLinearRegressor should be an `AbstractVector{<:Real}` of l
 
 ```julia
 # Install the packages if you don't already have them installed
-] add AbstractGPs, BayesianLinearRegressors LinearAlgebra Random Plots Zygote
+] add AbstractGPs BayesianLinearRegressors LinearAlgebra Random Plots Zygote
 using AbstractGPs, BayesianLinearRegressors, LinearAlgebra, Random, Plots, Zygote
 
 # Fix seed for re-producibility.
@@ -44,9 +44,9 @@ rng = MersenneTwister(123456)
 mw, Λw = zeros(2), Diagonal(ones(2))
 f = BayesianLinearRegressor(mw, Λw)
 
-# Index into the regressor and assume heterscedastic observation noise `Σ_noise`.
+# Index into the regressor and assume heteroscedastic observation noise `Σ_noise`.
 N = 10
-X = ColVecs(collect(hcat(collect(range(-5.0, 5.0, length=N)), ones(N))'))
+X = ColVecs(hcat(range(-5.0, 5.0, length=N), ones(N))')
 Σ_noise = Diagonal(exp.(randn(N)))
 fX = f(X, Σ_noise)
 
@@ -78,7 +78,7 @@ logpdf(f′(X, Σ_noise), y)
 
 # Sample from the posterior predictive distribution.
 N_plt = 1000
-X_plt = ColVecs(hcat(collect(range(-6.0, 6.0, length=N_plt)), ones(N_plt))')
+X_plt = ColVecs(hcat(range(-6.0, 6.0, length=N_plt), ones(N_plt))')
 
 # Compute some posterior marginal statisics.
 normals = marginals(f′(X_plt, eps()))
