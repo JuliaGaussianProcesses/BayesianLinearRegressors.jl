@@ -120,6 +120,54 @@ bfr = BasisFunctionRegressor(blr, ϕ)
 var(bfr(X)) == var(blr(ϕ(X)))
 ```
 
+## Drawing Function Samples
+
+There are two ways of drawing samples from `f::Union{BayesianLinearRegressor,BasisFunctionRegressor}`. The first is by using the `AbstractGPs` API (as in the above examples) where a `FiniteBLR` projection is first produced at a fixed set of input locations `X` with some specified observation noise `Σy`: `fx = f(X, Σy)::FiniteBLR`. Then, observations (including noise) at `X` can be sampled directly with `rand(rng, fx)`.
+The other way is to draw a sample of an entire function from `f` using `g = rand(rng, f)`. This samples a value for the weights `w ~ N(mw, Λw)` and produces a function `g(X) = w'X` which can be evaluated at any input locations. Note that this method corresponds to drawing samples of noiseless observations.
+
+``` julia
+using AbstractGPs, BayesianLinearRegressors, LinearAlgebra, Random, Plots
+
+# Fix seed for re-producibility.
+rng = MersenneTwister(123456)
+
+X = RowVecs(hcat(range(-1.0, 1.0, length=5)))
+f = BayesianLinearRegressor(zeros(2), Diagonal(ones(2)))
+
+## The first method of drawing samples - using the AbstractGPs API:
+# Index into the regressor at fixed inputs X and assume homoscedastic observation noise `Σ_noise`.
+N = 10
+X = ColVecs(hcat(range(-5.0, 5.0, length=N), ones(N))')
+Σ_noise = exp(randn())
+fX = f(X, Σ_noise)
+
+rand(rng, fX)
+
+## The second method - sampling an entire function:
+g = rand(rng, f)
+
+# This sample can now be evaulated at any input locations
+g(X)
+
+X′ = ColVecs(hcat(range(10.0, 15.0, length=N), ones(N))')
+g(X′)
+
+# Sample multiple functions for plotting
+gs = rand(rng, f, 100)
+
+N_plt = 1000
+X_plt = ColVecs(hcat(range(-6.0, 6.0, length=N_plt), ones(N_plt))')
+y_plt = reduce(hcat, [g(X_plt) for g in gs])
+
+sample_plot = plot();
+plot!(sample_plot, X_plt.X[1,:], y_plt;
+    label="",
+    color=:black,
+    linealpha=0.4,
+);
+display(sample_plot)
+```
+
 ## Up For Grabs
 
 - Scikit-learn style interface: it wouldn't be too hard to implement a scikit-learn - style interface to handle basic regression tasks, so please feel free to make a PR that implements this.
