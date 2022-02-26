@@ -34,8 +34,8 @@ Outputs for a BayesianLinearRegressor should be an `AbstractVector{<:Real}` of l
 
 ```julia
 # Install the packages if you don't already have them installed
-] add AbstractGPs, BayesianLinearRegressors LinearAlgebra Random Optim Plots Zygote
-using AbstractGPs, BayesianLinearRegressors, LinearAlgebra, Random, Optim, Plots, Zygote
+] add AbstractGPs, BayesianLinearRegressors LinearAlgebra Random Plots Zygote
+using AbstractGPs, BayesianLinearRegressors, LinearAlgebra, Random, Plots, Zygote
 
 # Fix seed for re-producibility.
 rng = MersenneTwister(123456)
@@ -79,7 +79,6 @@ logpdf(f′(X, Σ_noise), y)
 # Sample from the posterior predictive distribution.
 N_plt = 1000
 X_plt = ColVecs(hcat(collect(range(-6.0, 6.0, length=N_plt)), ones(N_plt))')
-f′X_plt = rand(rng, f′(X_plt, eps()), 100) # Samples with machine-epsilon noise for stability
 
 # Compute some posterior marginal statisics.
 normals = marginals(f′(X_plt, eps()))
