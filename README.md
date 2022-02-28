@@ -34,8 +34,8 @@ Outputs for a BayesianLinearRegressor should be an `AbstractVector{<:Real}` of l
 
 ```julia
 # Install the packages if you don't already have them installed
-] add AbstractGPs, BayesianLinearRegressors LinearAlgebra Random Optim Plots Zygote
-using AbstractGPs, BayesianLinearRegressors, LinearAlgebra, Random, Optim, Plots, Zygote
+] add AbstractGPs BayesianLinearRegressors LinearAlgebra Random Plots Zygote
+using AbstractGPs, BayesianLinearRegressors, LinearAlgebra, Random, Plots, Zygote
 
 # Fix seed for re-producibility.
 rng = MersenneTwister(123456)
@@ -44,9 +44,9 @@ rng = MersenneTwister(123456)
 mw, Λw = zeros(2), Diagonal(ones(2))
 f = BayesianLinearRegressor(mw, Λw)
 
-# Index into the regressor and assume heterscedastic observation noise `Σ_noise`.
+# Index into the regressor and assume heteroscedastic observation noise `Σ_noise`.
 N = 10
-X = ColVecs(collect(hcat(collect(range(-5.0, 5.0, length=N)), ones(N))'))
+X = ColVecs(hcat(range(-5.0, 5.0, length=N), ones(N))')
 Σ_noise = Diagonal(exp.(randn(N)))
 fX = f(X, Σ_noise)
 
@@ -78,8 +78,7 @@ logpdf(f′(X, Σ_noise), y)
 
 # Sample from the posterior predictive distribution.
 N_plt = 1000
-X_plt = ColVecs(hcat(collect(range(-6.0, 6.0, length=N_plt)), ones(N_plt))')
-f′X_plt = rand(rng, f′(X_plt, eps()), 100) # Samples with machine-epsilon noise for stability
+X_plt = ColVecs(hcat(range(-6.0, 6.0, length=N_plt), ones(N_plt))')
 
 # Compute some posterior marginal statisics.
 normals = marginals(f′(X_plt, eps()))
@@ -88,9 +87,9 @@ m′X_plt = mean.(normals)
 
 # Plot the posterior. This uses the default AbstractGPs plotting recipes.
 posterior_plot = plot();
-plot!(posterior_plot, X_plt[1, :], f′(X_plt, eps()); color=:blue, ribbon_scale=3);
-sampleplot!(posterior_plot, X_plt[1, :], f′(X_plt, eps()); color=:blue, samples=10);
-scatter!(posterior_plot, X[1, :], y; # Observations.
+plot!(posterior_plot, X_plt.X[1, :], f′(X_plt, eps()); color=:blue, ribbon_scale=3);
+sampleplot!(posterior_plot, X_plt.X[1, :], f′(X_plt, eps()); color=:blue, samples=10);
+scatter!(posterior_plot, X.X[1, :], y; # Observations.
     markercolor=:red,
     markershape=:circle,
     markerstrokewidth=0.0,
@@ -119,6 +118,54 @@ bfr = BasisFunctionRegressor(blr, ϕ)
 
 # These are equivalent
 var(bfr(X)) == var(blr(ϕ(X)))
+```
+
+## Drawing Function Samples
+
+There are two ways of drawing samples from `f::Union{BayesianLinearRegressor,BasisFunctionRegressor}`. The first is by using the `AbstractGPs` API (as in the above examples) where a `FiniteBLR` projection is first produced at a fixed set of input locations `X` with some specified observation noise `Σy`: `fx = f(X, Σy)::FiniteBLR`. Then, observations (including noise) at `X` can be sampled directly with `rand(rng, fx)`.
+The other way is to draw a sample of an entire function from `f` using `g = rand(rng, f)`. This samples a value for the weights `w ~ N(mw, Λw)` and produces a function `g(X) = w'X` which can be evaluated at any input locations. Note that this method corresponds to drawing samples of noiseless observations.
+
+``` julia
+using AbstractGPs, BayesianLinearRegressors, LinearAlgebra, Random, Plots
+
+# Fix seed for re-producibility.
+rng = MersenneTwister(123456)
+
+X = RowVecs(hcat(range(-1.0, 1.0, length=5)))
+f = BayesianLinearRegressor(zeros(2), Diagonal(ones(2)))
+
+## The first method of drawing samples - using the AbstractGPs API:
+# Index into the regressor at fixed inputs X and assume homoscedastic observation noise `Σ_noise`.
+N = 10
+X = ColVecs(hcat(range(-5.0, 5.0, length=N), ones(N))')
+Σ_noise = 0.1
+fX = f(X, Σ_noise)
+
+rand(rng, fX)
+
+## The second method - sampling an entire function:
+g = rand(rng, f)
+
+# This sample can now be evaulated at any input locations
+g(X)
+
+X′ = ColVecs(hcat(range(10.0, 15.0, length=N), ones(N))')
+g(X′)
+
+# Sample multiple functions for plotting
+gs = rand(rng, f, 100)
+
+N_plt = 1000
+X_plt = ColVecs(hcat(range(-6.0, 6.0, length=N_plt), ones(N_plt))')
+y_plt = reduce(hcat, [g(X_plt) for g in gs])
+
+sample_plot = plot();
+plot!(sample_plot, X_plt.X[1,:], y_plt;
+    label="",
+    color=:black,
+    linealpha=0.4,
+);
+display(sample_plot)
 ```
 
 ## Up For Grabs
