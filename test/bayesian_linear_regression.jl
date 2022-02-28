@@ -119,6 +119,49 @@
                 @test mean(f′(X′, Σy)) ≈ mean(f′2(X′, Σy))
                 @test cov(f′(X′, Σy)) ≈ cov(f′2(X′, Σy))
             end
+            @testset "PDMat weight matrix closure" begin
+                # Copied from https://github.com/JuliaLang/julia/pull/39352/files
+                @testset "constructing a Cholesky factor from a triangular matrix" begin
+                    A = [1.0 2.0; 3.0 4.0]
+                    let
+                        U = UpperTriangular(A)
+                        C = Cholesky(U)
+                        @test C isa Cholesky{Float64}
+                        @test C.U == U
+                        @test C.L == U'
+                    end
+                    let
+                        L = LowerTriangular(A)
+                        C = Cholesky(L)
+                        @test C isa Cholesky{Float64}
+                        @test C.L == L
+                        @test C.U == L'
+                    end
+                end
+                rng, N, D = MersenneTwister(123456), 13, 7
+                X = randn(rng, D, N)
+                X′ = randn(rng, D, N)
+                B = randn(rng, D, D)
+                U = UpperTriangular(B)
+                C = 0.1 * randn(rng, N, N)
+                mw, Σy = randn(rng, D), C * C' + I
+
+                Λw_pd = PDMat(Cholesky(U)) + I
+                f_pd = BayesianLinearRegressor(mw, Λw_pd)
+                fx_pd = f_pd(X, Σy)
+
+                Λw_sym = Symmetric(U'U + I)
+                f_sym = BayesianLinearRegressor(mw, Λw_sym)
+                fx_sym = f_sym(X, Σy)
+
+                y = rand(rng, fx_pd)
+                f′pd = posterior(fx_pd, y)
+                f′sym = posterior(fx_sym, y)
+                @test f′pd.Λw isa PDMat
+                @test f′sym.Λw isa Symmetric
+                @test mean(f′pd(X′, Σy)) ≈ mean(f′sym(X′, Σy))
+                @test cov(f′pd(X′, Σy)) ≈ cov(f′sym(X′, Σy))
+            end
         end
     end
     @testset "unrecognised AbstractVector" begin

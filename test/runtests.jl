@@ -6,6 +6,7 @@ using LinearAlgebra
 using Random
 using Test
 using Zygote
+using PDMats
 
 using BayesianLinearRegressors: BayesianLinearRegressor, posterior, marginals, cov, mean
 using FiniteDifferences: j′vp

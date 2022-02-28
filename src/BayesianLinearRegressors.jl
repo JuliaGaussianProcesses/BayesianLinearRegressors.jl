@@ -4,6 +4,7 @@ using AbstractGPs
 using LinearAlgebra
 using Random
 using Statistics
+using PDMats
 
 using AbstractGPs: AbstractGP, _cholesky, FiniteGP
 
