@@ -138,7 +138,7 @@ f = BayesianLinearRegressor(zeros(2), Diagonal(ones(2)))
 # Index into the regressor at fixed inputs X and assume homoscedastic observation noise `Σ_noise`.
 N = 10
 X = ColVecs(hcat(range(-5.0, 5.0, length=N), ones(N))')
-Σ_noise = exp(randn())
+Σ_noise = 0.1
 fX = f(X, Σ_noise)
 
 rand(rng, fX)
