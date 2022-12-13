@@ -40,6 +40,9 @@ const FiniteBFR = FiniteGP{<:BasisFunctionRegressor}
 
 _to_finite_blr(fx::FiniteBFR) = fx.f.blr(fx.f.ϕ(fx.x), fx.Σy)
 
+# All functionality below just implements the primary and secondary AbstractGPs APIs.
+# See AbstractGPs.jl's documentation for information regarding their semantics.
+
 AbstractGPs.mean(fx::FiniteBFR) = mean(_to_finite_blr(fx))
 
 AbstractGPs.cov(fx::FiniteBFR) = cov(_to_finite_blr(fx))
