@@ -53,7 +53,7 @@ AbstractGPs.mean_and_cov(fx::FiniteBFR) = mean_and_cov(_to_finite_blr(fx))
 
 AbstractGPs.mean_and_var(fx::FiniteBFR) = mean_and_var(_to_finite_blr(fx))
 
-function AbstractGPs.rand(rng::AbstractRNG, fx::FiniteBLR, samples::Int)
+function AbstractGPs.rand(rng::AbstractRNG, fx::FiniteBFR, samples::Int)
     return rand(rng, _to_finite_blr(fx), samples)
 end
 
