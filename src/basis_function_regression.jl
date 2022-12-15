@@ -36,6 +36,30 @@ struct BasisFunctionRegressor{Tblr<:BayesianLinearRegressor,Tϕ} <: AbstractGP
     ϕ::Tϕ
 end
 
-function (bfblr::BasisFunctionRegressor)(x::AbstractVector, args...)
-    return bfblr.blr(bfblr.ϕ(x), args...)
+const FiniteBFR = FiniteGP{<:BasisFunctionRegressor}
+
+_to_finite_blr(fx::FiniteBFR) = fx.f.blr(fx.f.ϕ(fx.x), fx.Σy)
+
+# All functionality below just implements the primary and secondary AbstractGPs APIs.
+# See AbstractGPs.jl's documentation for information regarding their semantics.
+
+AbstractGPs.mean(fx::FiniteBFR) = mean(_to_finite_blr(fx))
+
+AbstractGPs.cov(fx::FiniteBFR) = cov(_to_finite_blr(fx))
+
+AbstractGPs.var(fx::FiniteBFR) = var(_to_finite_blr(fx))
+
+AbstractGPs.mean_and_cov(fx::FiniteBFR) = mean_and_cov(_to_finite_blr(fx))
+
+AbstractGPs.mean_and_var(fx::FiniteBFR) = mean_and_var(_to_finite_blr(fx))
+
+function AbstractGPs.rand(rng::AbstractRNG, fx::FiniteBFR, samples::Int)
+    return rand(rng, _to_finite_blr(fx), samples)
+end
+
+AbstractGPs.logpdf(fx::FiniteBFR, y::AbstractVector{<:Real}) = logpdf(_to_finite_blr(fx), y)
+
+function AbstractGPs.posterior(fx::FiniteBFR, y::AbstractVector{<:Real})
+    f_post = posterior(_to_finite_blr(fx), y)
+    return BasisFunctionRegressor(f_post, fx.f.ϕ)
 end

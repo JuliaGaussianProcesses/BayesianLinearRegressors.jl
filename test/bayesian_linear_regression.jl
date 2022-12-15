@@ -9,15 +9,15 @@
             )
         end
         @testset "rand" begin
-            rng, N, D, samples = MersenneTwister(123456), 11, 3, 10_000_000
+            rng, N, D, samples = MersenneTwister(123456), 11, 3, 1_000_000
             X, f, Σy = generate_toy_problem(rng, N, D, Tx)
 
             # Roughly test the statistical properties of rand.
             Y = rand(rng, f(X, Σy), samples)
             m_empirical = mean(Y; dims=2)
             Σ_empirical = (Y .- mean(Y; dims=2)) * (Y .- mean(Y; dims=2))' ./ samples
-            @test mean(f(X, Σy)) ≈ m_empirical atol = 1e-3 rtol = 1e-3
-            @test cov(f(X, Σy)) ≈ Σ_empirical atol = 1e-3 rtol = 1e-3
+            @test mean(f(X, Σy)) ≈ m_empirical atol = 1e-2 rtol = 1e-2
+            @test cov(f(X, Σy)) ≈ Σ_empirical atol = 1e-2 rtol = 1e-2
 
             @testset "Zygote (everything dense)" begin
                 function rand_blr(X, A_Σy, mw, A_Λw)
