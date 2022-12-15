@@ -1,7 +1,7 @@
 # Bayesian Linear Regression in Julia
 
 [![Build Status](https://github.com/willtebbutt/BayesianLinearRegressors.jl/workflows/CI/badge.svg)](https://github.com/willtebbutt/BayesianLinearRegressors.jl/actions)
-[![Codecov](https://codecov.io/gh/willtebbutt/BayesianLinearRegressors.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/willtebbutt/BayesianLinearRegressors.jl)
+[![Codecov](https://codecov.io/gh/willtebbutt/BayesianLinearRegressors.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaGaussianProcesses/BayesianLinearRegressors.jl?branch=master)
 
 This is a simple package that does one thing, Bayesian Linear Regression, in around 100 lines of code.
 
