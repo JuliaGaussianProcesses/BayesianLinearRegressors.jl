@@ -24,7 +24,7 @@
             X, f, Σy = generate_toy_problem(rng, N, D, Tx)
             y = rand(rng, f(X, Σy))
 
-            # Construct MvNormal using a naive but simple computation for the mean / cov.
+            # Compute logpdf using a naive but simple computation for the mean / cov.
             function naive_normal_stats(X::Matrix)
                 return (X' * f.mw, Symmetric(X' * (cholesky(f.Λw) \ X) + Σy))
             end
@@ -33,7 +33,8 @@
             m, Σ = naive_normal_stats(X)
 
             # Check that logpdf agrees between distributions and BLR.
-            @test logpdf(f(X, Σy), y) ≈ logpdf(MvNormal(m, Σ), y)
+            δ = y - m
+            @test logpdf(f(X, Σy), y) ≈ -(N * log(2π) + logdet(Σ) + δ' * (Σ \ δ)) / 2
         end
         @testset "posterior" begin
             @testset "low noise" begin

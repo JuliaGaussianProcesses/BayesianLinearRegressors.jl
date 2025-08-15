@@ -1,10 +1,6 @@
 module BayesianLinearRegressors
 
-using AbstractGPs
-using LinearAlgebra
-using Random
-using Statistics
-using PDMats
+using AbstractGPs, LinearAlgebra, PDMats, Random
 
 using AbstractGPs: AbstractGP, _cholesky, FiniteGP
 

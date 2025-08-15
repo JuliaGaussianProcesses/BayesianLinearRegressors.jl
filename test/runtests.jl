@@ -1,7 +1,6 @@
 using
     AbstractGPs,
     BayesianLinearRegressors,
-    Distributions,
     LinearAlgebra,
     PDMats,
     Random,
