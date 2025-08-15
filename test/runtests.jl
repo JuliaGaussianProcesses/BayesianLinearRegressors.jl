@@ -1,10 +1,4 @@
-using
-    AbstractGPs,
-    BayesianLinearRegressors,
-    LinearAlgebra,
-    PDMats,
-    Random,
-    Test
+using AbstractGPs, BayesianLinearRegressors, LinearAlgebra, PDMats, Random, Test
 
 using BayesianLinearRegressors: BayesianLinearRegressor, posterior, marginals, cov, mean
 
