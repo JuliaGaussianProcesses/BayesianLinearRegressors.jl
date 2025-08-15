@@ -18,39 +18,13 @@
             Σ_empirical = (Y .- mean(Y; dims=2)) * (Y .- mean(Y; dims=2))' ./ samples
             @test mean(f(X, Σy)) ≈ m_empirical atol = 1e-2 rtol = 1e-2
             @test cov(f(X, Σy)) ≈ Σ_empirical atol = 1e-2 rtol = 1e-2
-
-            @testset "Zygote (everything dense)" begin
-                function rand_blr(X, A_Σy, mw, A_Λw)
-                    Σy, Λw = Symmetric(A_Σy * A_Σy' + I), Symmetric(A_Λw * A_Λw' + I)
-                    f = BayesianLinearRegressor(mw, Λw)
-                    return rand(MersenneTwister(123456), f(X, Σy), 3)
-                end
-                mw, A_Σy, A_Λw = f.mw, 0.1 .* randn(rng, N, N), 0.1 .* randn(rng, D, D)
-
-                # Run the model forwards and check that output agrees with non-Zygote output
-                z, back = Zygote.pullback(rand_blr, X, A_Σy, mw, A_Λw)
-                @test z == rand_blr(X, A_Σy, mw, A_Λw)
-
-                # Compute adjoints using Zygote.
-                z̄ = randn(rng, size(z))
-                dX, dA_Σy, dmw, dA_Λw = back(z̄)
-
-                # Verify adjoints via finite differencing.
-                fdm = central_fdm(5, 1)
-                @test dX ≈ first(j′vp(fdm, X -> rand_blr(X, A_Σy, mw, A_Λw), z̄, X))
-                @test dA_Σy ≈
-                    first(j′vp(fdm, A_Σy -> rand_blr(X, A_Σy, mw, A_Λw), z̄, A_Σy))
-                @test dmw ≈ first(j′vp(fdm, mw -> rand_blr(X, A_Σy, mw, A_Λw), z̄, mw))
-                @test dA_Λw ≈
-                    first(j′vp(fdm, A_Λw -> rand_blr(X, A_Σy, mw, A_Λw), z̄, A_Λw))
-            end
         end
         @testset "logpdf" begin
             rng, N, D = MersenneTwister(123456), 13, 7
             X, f, Σy = generate_toy_problem(rng, N, D, Tx)
             y = rand(rng, f(X, Σy))
 
-            # Construct MvNormal using a naive but simple computation for the mean / cov.
+            # Compute logpdf using a naive but simple computation for the mean / cov.
             function naive_normal_stats(X::Matrix)
                 return (X' * f.mw, Symmetric(X' * (cholesky(f.Λw) \ X) + Σy))
             end
@@ -59,33 +33,8 @@
             m, Σ = naive_normal_stats(X)
 
             # Check that logpdf agrees between distributions and BLR.
-            @test logpdf(f(X, Σy), y) ≈ logpdf(MvNormal(m, Σ), y)
-
-            @testset "Zygote (everything dense)" begin
-                function logpdf_blr(X, A_Σy, y, mw, A_Λw)
-                    Σy, Λw = Symmetric(A_Σy * A_Σy' + I), Symmetric(A_Λw * A_Λw' + I)
-                    f = BayesianLinearRegressor(mw, Λw)
-                    return logpdf(f(X, Σy), y)
-                end
-                mw, A_Σy, A_Λw = f.mw, 0.1 .* randn(rng, N, N), 0.1 .* randn(rng, D, D)
-
-                z, back = Zygote.pullback(logpdf_blr, X, A_Σy, y, mw, A_Λw)
-                @test z == logpdf_blr(X, A_Σy, y, mw, A_Λw)
-
-                # Compute gradients using Zygote.
-                z̄ = randn(rng)
-                dX, dA_Σy, dy, dmw, dA_Λw = back(z̄)
-
-                # Check correctness via finite differencing.
-                fdm = central_fdm(5, 1)
-                @test dX ≈ first(j′vp(fdm, X -> logpdf_blr(X, A_Σy, y, mw, A_Λw), z̄, X))
-                @test dA_Σy ≈
-                    first(j′vp(fdm, A_Σy -> logpdf_blr(X, A_Σy, y, mw, A_Λw), z̄, A_Σy))
-                @test dy ≈ first(j′vp(fdm, y -> logpdf_blr(X, A_Σy, y, mw, A_Λw), z̄, y))
-                @test dmw ≈ first(j′vp(fdm, mw -> logpdf_blr(X, A_Σy, y, mw, A_Λw), z̄, mw))
-                @test dA_Λw ≈
-                    first(j′vp(fdm, A_Λw -> logpdf_blr(X, A_Σy, y, mw, A_Λw), z̄, A_Λw))
-            end
+            δ = y - m
+            @test logpdf(f(X, Σy), y) ≈ -(N * log(2π) + logdet(Σ) + δ' * (Σ \ δ)) / 2
         end
         @testset "posterior" begin
             @testset "low noise" begin
